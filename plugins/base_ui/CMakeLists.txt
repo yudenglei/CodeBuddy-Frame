@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.16)
+include(${CMAKE_SOURCE_DIR}/cmake/PluginHelpers.cmake)
+
+add_cae_plugin(cae_plugin_base_ui SOURCES src/BaseUIPlugin.cpp HEADERS include/BaseUIPlugin.h TYPE UI_ONLY)
+target_include_directories(cae_plugin_base_ui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(ENABLE_GUI)
+    target_link_libraries(cae_plugin_base_ui PRIVATE cae_ui)
+    target_compile_definitions(cae_plugin_base_ui PRIVATE CAE_ENABLE_GUI)
+endif()
