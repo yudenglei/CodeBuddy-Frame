@@ -10,9 +10,12 @@ ActionManager& ActionManager::instance() {
 void ActionManager::registerAction(const ActionDescriptor& desc) {
     bool isNew = (actions_.find(desc.id) == actions_.end());
     actions_[desc.id] = desc;
+
     if (isNew) {
         registrationOrder_.push_back(desc.id);
     }
+
+    // 通知所有Observer（UI层将据此自动创建或更新菜单项）
     for (auto& obs : observers_) {
         obs(desc);
     }
@@ -23,8 +26,9 @@ void ActionManager::invoke(const std::string& id, const ActionContext& ctx) {
     if (it == actions_.end()) {
         throw std::runtime_error("ActionManager: unknown action id: " + id);
     }
-    if (it->second.callback) {
-        it->second.callback(ctx);
+    const ActionDescriptor& desc = it->second;
+    if (desc.callback) {
+        desc.callback(ctx);
     }
 }
 
@@ -32,7 +36,10 @@ void ActionManager::setShortcut(const std::string& id, const std::string& shortc
     auto it = actions_.find(id);
     if (it != actions_.end()) {
         it->second.shortcut = shortcut;
-        for (auto& obs : observers_) obs(it->second);
+        // 通知Observer更新快捷键
+        for (auto& obs : observers_) {
+            obs(it->second);
+        }
     }
 }
 
@@ -46,7 +53,9 @@ std::vector<ActionDescriptor> ActionManager::listActions() const {
     result.reserve(registrationOrder_.size());
     for (const auto& id : registrationOrder_) {
         auto it = actions_.find(id);
-        if (it != actions_.end()) result.push_back(it->second);
+        if (it != actions_.end()) {
+            result.push_back(it->second);
+        }
     }
     return result;
 }
@@ -58,4 +67,5 @@ void ActionManager::onActionRegistered(std::function<void(const ActionDescriptor
 void ActionManager::clear() {
     actions_.clear();
     registrationOrder_.clear();
+    // 保留observers，测试时可能需要重新注册
 }

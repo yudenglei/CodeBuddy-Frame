@@ -4,60 +4,132 @@
 #include "core/ActionContext.h"
 #include <iostream>
 #include <string>
-#include <memory>
 
+// ============================================================
+// PCB数据库引擎实现（简化示例）
+// ============================================================
 class PCBDBEngine : public IDBEngine {
 public:
-    bool open(const std::string& path) override { dbPath_ = path; isOpen_ = true; std::cout << "[PCBDBEngine] Opened: " << path << "\n"; return true; }
-    void close() override { isOpen_ = false; }
+    bool open(const std::string& path) override {
+        dbPath_ = path;
+        isOpen_ = true;
+        std::cout << "[PCBDBEngine] Opened: " << path << "\n";
+        return true;
+    }
+    void close() override {
+        isOpen_ = false;
+        std::cout << "[PCBDBEngine] Closed\n";
+    }
     bool isOpen() const override { return isOpen_; }
-    std::string query(const std::string& sql) override { return "{\"result\":\"mock\",\"query\":\"" + sql + "\"}"; }
+    std::string query(const std::string& sql) override {
+        return "{\"result\": \"mock\", \"query\": \"" + sql + "\"}";
+    }
     bool beginTransaction()    override { return true; }
     bool commitTransaction()   override { return true; }
     bool rollbackTransaction() override { return true; }
     std::string getEngineName() const override { return "PCBSQLite"; }
+
 private:
     std::string dbPath_;
     bool isOpen_{false};
 };
 
+// ============================================================
+// PCBDBPlugin：纯DB插件（DB_ONLY），注册 Layout 菜单 Actions
+// ============================================================
 class PCBDBPlugin : public IPlugin {
 public:
     PluginMeta getMeta() const override {
-        return {"pcb_db", "1.0.0", "PCB Database Plugin", PluginType::DB_ONLY, {}};
+        return PluginMeta{
+            "pcb_db",
+            "1.0.0",
+            "PCB Database Plugin: Layer/Cell/DRC/Net management",
+            PluginType::DB_ONLY,
+            {}  // 无依赖
+        };
     }
-    bool isCompatible(RunMode) const override { return true; }
-    bool initialize(RunMode) override {
+
+    bool isCompatible(RunMode /*mode*/) const override {
+        return true; // DB_ONLY 在所有模式下均可用
+    }
+
+    bool initialize(RunMode mode) override {
         dbEngine_ = std::make_unique<PCBDBEngine>();
         registerLayoutActions();
         std::cout << "[PCBDBPlugin] Initialized\n";
         return true;
     }
+
     void shutdown() override {
-        if (dbEngine_ && dbEngine_->isOpen()) dbEngine_->close();
+        if (dbEngine_ && dbEngine_->isOpen()) {
+            dbEngine_->close();
+        }
         std::cout << "[PCBDBPlugin] Shutdown\n";
     }
+
+    IDBEngine* getDBEngine() { return dbEngine_.get(); }
+
 private:
     void registerLayoutActions() {
         auto& am = ActionManager::instance();
-        am.registerAction({"Layout.LayerManager",  "Layer Manager...",  "Open layer management",  "", "L",  "layout_menu",
-            [this](const ActionContext&){ std::cout << "[Action] Layout.LayerManager\n"; if(dbEngine_) dbEngine_->query("SELECT layers"); }});
-        am.registerAction({"Layout.CellHierarchy", "Cell Hierarchy...", "Show cell hierarchy",    "", "",   "layout_menu",
-            [](const ActionContext&){ std::cout << "[Action] Layout.CellHierarchy\n"; }});
-        am.registerAction({"Layout.Sep1", "", "", "", "", "layout_menu/---", nullptr});
-        am.registerAction({"Layout.RunDRC", "Design Rule Check", "Run DRC", "", "F5", "layout_menu",
-            [this](const ActionContext&){
-                std::cout << "[Action] Layout.RunDRC\n";
-                if (dbEngine_ && dbEngine_->isOpen()) std::cout << "  " << dbEngine_->query("DRC CHECK ALL") << "\n";
-                else std::cout << "  No design open\n";
-            }});
-        am.registerAction({"Layout.NetInspector", "Net Inspector...", "Open net inspector", "", "", "layout_menu",
-            [](const ActionContext&){ std::cout << "[Action] Layout.NetInspector\n"; }});
+
+        am.registerAction({
+            "Layout.LayerManager", "Layer Manager...",
+            "Open layer management panel", "",
+            "L", "layout_menu",
+            [this](const ActionContext& ctx) {
+                std::cout << "[Action] Layout.LayerManager - layers in DB: "
+                          << (dbEngine_ ? dbEngine_->query("SELECT layers") : "N/A") << "\n";
+            }
+        });
+
+        am.registerAction({
+            "Layout.CellHierarchy", "Cell Hierarchy...",
+            "Show cell hierarchy browser", "",
+            "", "layout_menu",
+            [this](const ActionContext& ctx) {
+                std::cout << "[Action] Layout.CellHierarchy executed\n";
+            }
+        });
+
+        am.registerAction({
+            "Layout.Sep1", "",
+            "", "", "", "layout_menu/---",
+            nullptr
+        });
+
+        am.registerAction({
+            "Layout.RunDRC", "Design Rule Check",
+            "Run design rule check on current layout", "",
+            "F5", "layout_menu",
+            [this](const ActionContext& ctx) {
+                std::cout << "[Action] Layout.RunDRC - running DRC...\n";
+                if (dbEngine_ && dbEngine_->isOpen()) {
+                    auto result = dbEngine_->query("DRC CHECK ALL");
+                    std::cout << "  DRC result: " << result << "\n";
+                } else {
+                    std::cout << "  No design open\n";
+                }
+            }
+        });
+
+        am.registerAction({
+            "Layout.NetInspector", "Net Inspector...",
+            "Open net inspection tool", "",
+            "", "layout_menu",
+            [this](const ActionContext& ctx) {
+                std::cout << "[Action] Layout.NetInspector executed\n";
+            }
+        });
     }
+
     std::unique_ptr<PCBDBEngine> dbEngine_;
 };
 
+// ============================================================
+// 导出函数
+// ============================================================
 extern "C" {
-    IPlugin* createPlugin()        { return new PCBDBPlugin(); }
-    void destroyPlugin(IPlugin* p) { delete p; }
+    IPlugin* createPlugin()         { return new PCBDBPlugin(); }
+    void destroyPlugin(IPlugin* p)  { delete p; }
 }

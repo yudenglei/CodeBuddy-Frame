@@ -12,6 +12,8 @@ public:
     virtual PluginMeta getMeta() const = 0;
 
     /// @brief 初始化插件（注册Actions，建立DB连接等）
+    /// @param mode 当前运行模式，插件据此决定初始化内容
+    /// @return true=成功，false=初始化失败（插件管理器将跳过此插件）
     virtual bool initialize(RunMode mode) = 0;
 
     /// @brief 关闭插件（释放资源）
@@ -21,7 +23,12 @@ public:
     virtual bool isCompatible(RunMode mode) const = 0;
 };
 
+// ============================================================
+// 每个插件动态库必须导出以下两个C函数
+// ============================================================
 extern "C" {
+    /// @brief 创建插件实例（工厂函数）
     typedef IPlugin* (*CreatePluginFunc)();
+    /// @brief 销毁插件实例
     typedef void (*DestroyPluginFunc)(IPlugin*);
 }

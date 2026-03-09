@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package cae;
+
+option optimize_for = SPEED;
+
+// ============================================================
+// PluginService：通过 gRPC 远程调用插件功能
+// ============================================================
+service PluginService {
+    // 触发一个已注册的 Action（等价于 GUI 菜单点击）
+    rpc ExecuteAction (ExecuteActionRequest)  returns (ExecuteActionResponse);
+
+    // 列出所有已注册的 Actions
+    rpc ListActions   (ListActionsRequest)    returns (ListActionsResponse);
+
+    // 加载插件（运行时动态加载）
+    rpc LoadPlugin    (LoadPluginRequest)     returns (LoadPluginResponse);
+
+    // 列出所有已加载插件
+    rpc ListPlugins   (ListPluginsRequest)    returns (ListPluginsResponse);
+
+    // 流式输出：持续推送 Action 执行日志（用于长时任务监控）
+    rpc StreamActionLog (StreamActionLogRequest) returns (stream ActionLogEntry);
+}
+
+// ---- ExecuteAction ----
+message ExecuteActionRequest {
+    string action_id = 1;                   // "Layout.RunDRC"
+    map<string, string> params = 2;         // 额外参数
+}
+message ExecuteActionResponse {
+    bool   success = 1;
+    string message = 2;                     // 错误信息或执行结果摘要
+    string result_json = 3;                 // JSON格式的执行结果（可选）
+}
+
+// ---- ListActions ----
+message ListActionsRequest {
+    string filter_prefix = 1;              // 可选：按前缀过滤，如 "Layout."
+}
+message ActionInfo {
+    string id       = 1;
+    string label    = 2;
+    string tooltip  = 3;
+    string shortcut = 4;
+    string menu_path = 5;
+}
+message ListActionsResponse {
+    repeated ActionInfo actions = 1;
+}
+
+// ---- LoadPlugin ----
+message LoadPluginRequest {
+    string plugin_path = 1;                // 插件动态库路径
+}
+message LoadPluginResponse {
+    bool   success     = 1;
+    string plugin_name = 2;
+    string message     = 3;
+}
+
+// ---- ListPlugins ----
+message ListPluginsRequest {}
+message PluginInfo {
+    string name        = 1;
+    string version     = 2;
+    string description = 3;
+    string type        = 4;               // "UI_ONLY" / "DB_ONLY" / "HYBRID"
+    repeated string dependencies = 5;
+}
+message ListPluginsResponse {
+    repeated PluginInfo plugins = 1;
+}
+
+// ---- StreamActionLog ----
+message StreamActionLogRequest {
+    string action_id = 1;
+}
+message ActionLogEntry {
+    string timestamp = 1;
+    string level     = 2;                 // "INFO" / "WARN" / "ERROR"
+    string message   = 3;
+}

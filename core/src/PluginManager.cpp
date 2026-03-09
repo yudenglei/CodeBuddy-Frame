@@ -9,12 +9,14 @@
 #include <stdexcept>
 #include <iostream>
 
+// DynamicLoader前向声明（实现在DynamicLoader.cpp）
 struct LibHandle;
 LibHandle* dynamicLoad(const std::string& path);
 void* dynamicSymbol(LibHandle* handle, const std::string& symbol);
 void dynamicUnload(LibHandle* handle);
 std::vector<std::string> scanDirectory(const std::string& dir, const std::string& ext);
 
+/// @brief 插件记录（包含动态库句柄和实例）
 struct PluginEntry {
     std::string path;
     LibHandle*  libHandle{nullptr};
@@ -22,38 +24,71 @@ struct PluginEntry {
     DestroyPluginFunc destroyFunc{nullptr};
 };
 
+/// @brief PluginManager实现（Kahn拓扑排序 + 自动发现）
 class PluginManager : public IPluginManager {
 public:
     ~PluginManager() override { shutdownAll(); }
 
     bool discover(const std::string& pluginDir) override {
+        // 获取平台扩展名
 #ifdef _WIN32
         const std::string ext = ".dll";
 #else
         const std::string ext = ".so";
 #endif
         auto files = scanDirectory(pluginDir, ext);
+
         for (const auto& file : files) {
             auto* handle = dynamicLoad(file);
-            if (!handle) { std::cerr << "[PluginManager] Failed: " << file << "\n"; continue; }
-            auto createFunc = reinterpret_cast<CreatePluginFunc>(dynamicSymbol(handle, "createPlugin"));
-            auto destroyFunc = reinterpret_cast<DestroyPluginFunc>(dynamicSymbol(handle, "destroyPlugin"));
-            if (!createFunc || !destroyFunc) { dynamicUnload(handle); continue; }
+            if (!handle) {
+                std::cerr << "[PluginManager] Failed to load: " << file << "\n";
+                continue;
+            }
+
+            auto createFunc = reinterpret_cast<CreatePluginFunc>(
+                dynamicSymbol(handle, "createPlugin"));
+            auto destroyFunc = reinterpret_cast<DestroyPluginFunc>(
+                dynamicSymbol(handle, "destroyPlugin"));
+
+            if (!createFunc || !destroyFunc) {
+                std::cerr << "[PluginManager] Missing createPlugin/destroyPlugin in: " << file << "\n";
+                dynamicUnload(handle);
+                continue;
+            }
+
             IPlugin* plugin = createFunc();
-            if (!plugin) { dynamicUnload(handle); continue; }
+            if (!plugin) {
+                dynamicUnload(handle);
+                continue;
+            }
+
             PluginEntry entry;
-            entry.path = file; entry.libHandle = handle; entry.plugin = plugin; entry.destroyFunc = destroyFunc;
-            entries_[plugin->getMeta().name] = std::move(entry);
+            entry.path       = file;
+            entry.libHandle  = handle;
+            entry.plugin     = plugin;
+            entry.destroyFunc = destroyFunc;
+
+            std::string name = plugin->getMeta().name;
+            entries_[name] = std::move(entry);
         }
+
         return !entries_.empty();
     }
 
     bool initializeAll(RunMode mode) override {
+        // Kahn拓扑排序
         auto sorted = topoSort();
+
         for (const auto& name : sorted) {
             auto& entry = entries_[name];
-            if (!entry.plugin->isCompatible(mode)) { std::cout << "[PluginManager] Skip: " << name << "\n"; continue; }
-            if (!entry.plugin->initialize(mode)) { std::cerr << "[PluginManager] Failed init: " << name << "\n"; return false; }
+            if (!entry.plugin->isCompatible(mode)) {
+                std::cout << "[PluginManager] Skip incompatible plugin: " << name << "\n";
+                continue;
+            }
+            if (!entry.plugin->initialize(mode)) {
+                std::cerr << "[PluginManager] Plugin initialization failed: " << name << "\n";
+                return false;
+            }
             loadOrder_.push_back(name);
             std::cout << "[PluginManager] Loaded: " << name << "\n";
         }
@@ -61,16 +96,23 @@ public:
     }
 
     void shutdownAll() override {
+        // 逆序关闭
         for (auto it = loadOrder_.rbegin(); it != loadOrder_.rend(); ++it) {
             auto eit = entries_.find(*it);
             if (eit != entries_.end() && eit->second.plugin) {
                 eit->second.plugin->shutdown();
-                if (eit->second.destroyFunc) eit->second.destroyFunc(eit->second.plugin);
+                if (eit->second.destroyFunc) {
+                    eit->second.destroyFunc(eit->second.plugin);
+                }
                 eit->second.plugin = nullptr;
-                if (eit->second.libHandle) { dynamicUnload(eit->second.libHandle); eit->second.libHandle = nullptr; }
+                if (eit->second.libHandle) {
+                    dynamicUnload(eit->second.libHandle);
+                    eit->second.libHandle = nullptr;
+                }
             }
         }
-        loadOrder_.clear(); entries_.clear();
+        loadOrder_.clear();
+        entries_.clear();
     }
 
     IPlugin* getPlugin(const std::string& name) const override {
@@ -89,9 +131,12 @@ public:
 
 private:
     /// @brief Kahn算法拓扑排序
+    /// @throws std::runtime_error 存在循环依赖时
     std::vector<std::string> topoSort() {
+        // 构建入度表和邻接表
         std::unordered_map<std::string, int> inDegree;
-        std::unordered_map<std::string, std::vector<std::string>> dependents;
+        std::unordered_map<std::string, std::vector<std::string>> dependents; // A->被A依赖的节点
+
         for (auto& [name, entry] : entries_) {
             if (inDegree.find(name) == inDegree.end()) inDegree[name] = 0;
             for (const auto& dep : entry.plugin->getMeta().dependencies) {
@@ -99,18 +144,29 @@ private:
                 dependents[dep].push_back(name);
             }
         }
+
+        // BFS队列（入度为0的节点）
         std::vector<std::string> queue;
-        for (auto& [name, deg] : inDegree) if (deg == 0) queue.push_back(name);
+        for (auto& [name, deg] : inDegree) {
+            if (deg == 0) queue.push_back(name);
+        }
+
         std::vector<std::string> sorted;
         size_t head = 0;
         while (head < queue.size()) {
             std::string cur = queue[head++];
             sorted.push_back(cur);
-            for (const auto& dep : dependents[cur])
-                if (--inDegree[dep] == 0) queue.push_back(dep);
+            for (const auto& dep : dependents[cur]) {
+                if (--inDegree[dep] == 0) {
+                    queue.push_back(dep);
+                }
+            }
         }
-        if (sorted.size() != entries_.size())
+
+        if (sorted.size() != entries_.size()) {
             throw std::runtime_error("[PluginManager] Circular dependency detected!");
+        }
+
         return sorted;
     }
 
@@ -118,6 +174,7 @@ private:
     std::vector<std::string> loadOrder_;
 };
 
+// PluginManager工厂函数
 std::unique_ptr<IPluginManager> createPluginManager() {
     return std::make_unique<PluginManager>();
 }
