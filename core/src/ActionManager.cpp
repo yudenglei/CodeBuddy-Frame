@@ -1,4 +1,4 @@
-#include "core/ActionManager.h"
+﻿#include "core/ActionManager.h"
 #include <stdexcept>
 #include <algorithm>
 
@@ -15,7 +15,7 @@ void ActionManager::registerAction(const ActionDescriptor& desc) {
         registrationOrder_.push_back(desc.id);
     }
 
-    // 通知所有Observer（UI层将据此自动创建或更新菜单项）
+    // 閫氱煡鎵€鏈塐bserver锛圲I灞傚皢鎹鑷姩鍒涘缓鎴栨洿鏂拌彍鍗曢」锛?
     for (auto& obs : observers_) {
         obs(desc);
     }
@@ -36,7 +36,7 @@ void ActionManager::setShortcut(const std::string& id, const std::string& shortc
     auto it = actions_.find(id);
     if (it != actions_.end()) {
         it->second.shortcut = shortcut;
-        // 通知Observer更新快捷键
+        // 閫氱煡Observer鏇存柊蹇嵎閿?
         for (auto& obs : observers_) {
             obs(it->second);
         }
@@ -67,5 +67,5 @@ void ActionManager::onActionRegistered(std::function<void(const ActionDescriptor
 void ActionManager::clear() {
     actions_.clear();
     registrationOrder_.clear();
-    // 保留observers，测试时可能需要重新注册
+    // 淇濈暀observers锛屾祴璇曟椂鍙兘闇€瑕侀噸鏂版敞鍐?
 }

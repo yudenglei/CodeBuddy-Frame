@@ -1,6 +1,9 @@
-#include "adapters/python/PythonAdapter.h"
+﻿#include "adapters/python/PythonAdapter.h"
 #include "core/ActionManager.h"
+#include "core/ActionContext.h"
+#include "core/RunMode.h"
 #include <stdexcept>
+#include <unordered_map>
 
 PythonAdapter& PythonAdapter::instance() {
     static PythonAdapter inst;
@@ -12,7 +15,7 @@ void PythonAdapter::invoke(const std::string& actionId,
     ActionContext ctx;
     ctx.sourceMode = RunMode::PYTHON;
     for (const auto& [k, v] : params) {
-        ctx.params[k] = v; // string 类型参数
+        ctx.params[k] = v; // string 绫诲瀷鍙傛暟
     }
     ActionManager::instance().invoke(actionId, ctx);
 }

@@ -11,9 +11,9 @@ pybind11_add_module(cae_plugin
     src/PythonModule.cpp
 )
 
-target_include_directories(cae_plugin
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(cae_plugin PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/core/include
 )
 
 target_link_libraries(cae_plugin PRIVATE cae_core)

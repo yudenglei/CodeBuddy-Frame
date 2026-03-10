@@ -1,4 +1,4 @@
-#include "core/IPlugin.h"
+﻿#include "core/IPlugin.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
 #include <iostream>
@@ -10,11 +10,11 @@
 #include <QLabel>
 #endif
 
-/// @brief PCB分析插件（HYBRID）
+/// @brief PCB鍒嗘瀽鎻掍欢锛圚YBRID锛?
 ///
-/// 依赖关系：pcb_analysis → pcb_db（通过 PluginMeta.dependencies 声明）
-/// - 所有模式：注册 Tools.* Actions
-/// - 仅 GUI 模式：额外提供分析结果停靠面板
+/// 渚濊禆鍏崇郴锛歱cb_analysis 鈫?pcb_db锛堥€氳繃 PluginMeta.dependencies 澹版槑锛?
+/// - 鎵€鏈夋ā寮忥細娉ㄥ唽 Tools.* Actions
+/// - 浠?GUI 妯″紡锛氶澶栨彁渚涘垎鏋愮粨鏋滃仠闈犻潰鏉?
 #ifdef CAE_ENABLE_GUI
 class PCBAnalysisPlugin : public IPlugin, public IUIPlugin {
 #else
@@ -27,12 +27,12 @@ public:
             "1.0.0",
             "PCB Analysis Plugin: impedance/SI analysis tools (HYBRID)",
             PluginType::HYBRID,
-            {"pcb_db"}  // 依赖 pcb_db 先加载
+            {"pcb_db"}  // 渚濊禆 pcb_db 鍏堝姞杞?
         };
     }
 
     bool isCompatible(RunMode /*mode*/) const override {
-        return true; // HYBRID 在所有模式下均可用
+        return true; // HYBRID 鍦ㄦ墍鏈夋ā寮忎笅鍧囧彲鐢?
     }
 
     bool initialize(RunMode mode) override {
@@ -48,7 +48,7 @@ public:
 
 #ifdef CAE_ENABLE_GUI
     void setupUI(MainWindow* mainWindow) override {
-        // 创建分析结果停靠面板
+        // 鍒涘缓鍒嗘瀽缁撴灉鍋滈潬闈㈡澘
         auto* dock = new QDockWidget("Analysis Results", mainWindow);
         dock->setObjectName("AnalysisResultsDock");
         auto* label = new QLabel("Analysis results will appear here", dock);
@@ -101,8 +101,8 @@ private:
             [this](const ActionContext& ctx) {
                 std::cout << "[Action] Tools.ImpedanceAnalysis - mode="
                           << (int)mode_ << "\n";
-                // 在 HEADLESS/PYTHON/GRPC 模式下输出文本报告
-                // 在 GUI 模式下还会更新 resultDock_ 面板
+                // 鍦?HEADLESS/PYTHON/GRPC 妯″紡涓嬭緭鍑烘枃鏈姤鍛?
+                // 鍦?GUI 妯″紡涓嬭繕浼氭洿鏂?resultDock_ 闈㈡澘
 #ifdef CAE_ENABLE_GUI
                 if (mode_ == RunMode::GUI && resultDock_) {
                     auto* label = qobject_cast<QLabel*>(resultDock_->widget());
@@ -144,7 +144,7 @@ private:
 };
 
 // ============================================================
-// 导出函数
+// 瀵煎嚭鍑芥暟
 // ============================================================
 extern "C" {
     IPlugin* createPlugin()         { return new PCBAnalysisPlugin(); }

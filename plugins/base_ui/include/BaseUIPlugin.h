@@ -1,21 +1,21 @@
-#pragma once
+﻿#pragma once
 #include "core/IPlugin.h"
 #include "core/PluginMeta.h"
+#include "core/PluginGlobal.h"
 
 #ifdef CAE_ENABLE_GUI
 #include "ui/IUIPlugin.h"
 class MainWindow;
 #endif
 
-/// @brief 基础UI插件（UI_ONLY）
-///
-/// 负责注册 Desktop.* 和 View.* 系列 Actions，
-/// 提供项目文件管理和视图控制功能。
-/// isCompatible() 仅在 GUI 模式下返回 true。
+/// @brief 鍩虹UI鎻掍欢锛圲I_ONLY锛?///
+/// 璐熻矗娉ㄥ唽 ANSYS 椋庢牸鐨勮彍鍗曞拰宸ュ叿鏍忥細
+/// - 椤跺眰鑿滃崟锛欶ile/Edit/View/Project/Draw/Modeler/HFSS/Tools/Window/Help
+/// - 宸ュ叿鏍忥細Draw/Modeler/HFSS 绛夐€夐」鍗＄殑鍒嗙粍鎸夐挳
 #ifdef CAE_ENABLE_GUI
-class BaseUIPlugin : public IPlugin, public IUIPlugin {
+class CAE_PLUGIN_EXPORT BaseUIPlugin : public IPlugin, public IUIPlugin {
 #else
-class BaseUIPlugin : public IPlugin {
+class CAE_PLUGIN_EXPORT BaseUIPlugin : public IPlugin {
 #endif
 public:
     BaseUIPlugin() = default;
@@ -29,21 +29,28 @@ public:
 #ifdef CAE_ENABLE_GUI
     void setupUI(MainWindow* mainWindow) override;
     void teardownUI() override;
+    MainWindow* getMainWindow() const { return mainWindow_; }
 #endif
 
 private:
-    void registerDesktopActions();
+    // 鑿滃崟娉ㄥ唽
+    void registerFileActions();
+    void registerEditActions();
     void registerViewActions();
+    void registerProjectActions();
+    void registerDrawActions();
+    void registerModelerActions();
+    void registerToolsActions();
 
 #ifdef CAE_ENABLE_GUI
     MainWindow* mainWindow_{nullptr};
 #endif
 };
 
-// ============================================================
-// 导出函数
-// ============================================================
+// ============================================================================
+// 瀵煎嚭鍑芥暟锛圕鎺ュ彛锛屼娇鐢?extern "C" 纭繚绗﹀彿涓€鑷达級
+// ============================================================================
 extern "C" {
-    IPlugin* createPlugin();
-    void destroyPlugin(IPlugin* plugin);
+    CAE_PLUGIN_EXPORT IPlugin* createPlugin();
+    CAE_PLUGIN_EXPORT void destroyPlugin(IPlugin* plugin);
 }

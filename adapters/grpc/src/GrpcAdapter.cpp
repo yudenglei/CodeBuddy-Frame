@@ -1,14 +1,13 @@
-#ifdef CAE_ENABLE_GRPC
+﻿#ifdef CAE_ENABLE_GRPC
 
 #include "adapters/grpc/GrpcAdapter.h"
 #include "plugin_service.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 #include <thread>
 #include <iostream>
+#include <memory>
 
-// 引入服务实现（同编译单元）
-// PluginServiceImpl 在 PluginServiceImpl.cpp 中定义
-class PluginServiceImpl;
+// 寮曞叆鏈嶅姟瀹炵幇锛堝悓缂栬瘧鍗曞厓锛?// PluginServiceImpl 鍦?PluginServiceImpl.cpp 涓畾涔?class PluginServiceImpl;
 
 struct GrpcAdapter::Impl {
     std::unique_ptr<grpc::Server> server;
@@ -36,7 +35,7 @@ bool GrpcAdapter::start(const std::string& address) {
     }
     std::cout << "[GrpcAdapter] Server listening on " << address
               << " (port=" << impl_->port << ")\n";
-    impl_->server->Wait(); // 阻塞
+    impl_->server->Wait(); // 闃诲
     return true;
 }
 

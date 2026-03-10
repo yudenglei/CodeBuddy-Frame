@@ -1,6 +1,6 @@
-/// @file test_action_manager.cpp
-/// @brief ActionManager 单元测试
-/// 覆盖：register/invoke/重复注册覆盖/invoke不存在ID/Observer通知顺序
+﻿/// @file test_action_manager.cpp
+/// @brief ActionManager 鍗曞厓娴嬭瘯
+/// 瑕嗙洊锛歳egister/invoke/閲嶅娉ㄥ唽瑕嗙洊/invoke涓嶅瓨鍦↖D/Observer閫氱煡椤哄簭
 
 #include <gtest/gtest.h>
 #include "core/ActionManager.h"
@@ -13,7 +13,7 @@ protected:
     }
 };
 
-// ---- 基本注册和 invoke ----
+// ---- 鍩烘湰娉ㄥ唽鍜?invoke ----
 TEST_F(ActionManagerTest, RegisterAndInvoke) {
     bool executed = false;
     ActionDescriptor desc;
@@ -27,7 +27,7 @@ TEST_F(ActionManagerTest, RegisterAndInvoke) {
     EXPECT_TRUE(executed);
 }
 
-// ---- 重复注册应覆盖原有 callback ----
+// ---- 閲嶅娉ㄥ唽搴旇鐩栧師鏈?callback ----
 TEST_F(ActionManagerTest, DuplicateRegisterOverwrites) {
     int counter = 0;
 
@@ -42,10 +42,10 @@ TEST_F(ActionManagerTest, DuplicateRegisterOverwrites) {
     ActionManager::instance().registerAction(d2);
 
     ActionManager::instance().invoke("Test.Counter");
-    EXPECT_EQ(counter, 10); // 应执行第二个callback
+    EXPECT_EQ(counter, 10); // 搴旀墽琛岀浜屼釜callback
 }
 
-// ---- invoke 不存在的 ID 应抛出异常 ----
+// ---- invoke 涓嶅瓨鍦ㄧ殑 ID 搴旀姏鍑哄紓甯?----
 TEST_F(ActionManagerTest, InvokeUnknownThrows) {
     EXPECT_THROW(
         ActionManager::instance().invoke("NonExistent.Action"),
@@ -53,7 +53,7 @@ TEST_F(ActionManagerTest, InvokeUnknownThrows) {
     );
 }
 
-// ---- Observer 通知顺序 ----
+// ---- Observer 閫氱煡椤哄簭 ----
 TEST_F(ActionManagerTest, ObserverNotificationOrder) {
     std::vector<std::string> callOrder;
 
@@ -73,7 +73,7 @@ TEST_F(ActionManagerTest, ObserverNotificationOrder) {
     EXPECT_EQ(callOrder[1], "obs2:Test.ObsTest");
 }
 
-// ---- listActions 保持注册顺序 ----
+// ---- listActions 淇濇寔娉ㄥ唽椤哄簭 ----
 TEST_F(ActionManagerTest, ListActionsPreservesOrder) {
     for (const char* id : {"Test.C", "Test.A", "Test.B"}) {
         ActionDescriptor d;
@@ -103,7 +103,7 @@ TEST_F(ActionManagerTest, FindAction) {
     EXPECT_EQ(notFound, nullptr);
 }
 
-// ---- ActionContext 参数传递 ----
+// ---- ActionContext 鍙傛暟浼犻€?----
 TEST_F(ActionManagerTest, ActionContextParamsPassed) {
     std::string receivedPath;
 

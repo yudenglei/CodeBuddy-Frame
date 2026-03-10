@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.16)
+﻿cmake_minimum_required(VERSION 3.16)
 
-# UI库：仅在 ENABLE_GUI=ON 时编译
-if(NOT ENABLE_GUI)
+# UI搴擄細浠呭湪 ENABLE_GUI=ON 鏃剁紪璇?if(NOT ENABLE_GUI)
     return()
 endif()
 
@@ -15,6 +14,7 @@ add_library(cae_ui STATIC
     src/MainWindow.cpp
     src/MenuBuilder.cpp
     src/UIActionBridge.cpp
+    src/RibbonBar.cpp
 )
 
 target_include_directories(cae_ui
@@ -23,14 +23,14 @@ target_include_directories(cae_ui
         $<INSTALL_INTERFACE:include>
 )
 
+
 target_link_libraries(cae_ui
     PUBLIC
         cae_core
         Qt5::Widgets
 )
 
-# GUI模式宏定义
-target_compile_definitions(cae_ui PUBLIC CAE_ENABLE_GUI)
+# GUI妯″紡瀹忓畾涔?target_compile_definitions(cae_ui PUBLIC CAE_ENABLE_GUI)
 
 target_compile_features(cae_ui PUBLIC cxx_std_17)
 

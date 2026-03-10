@@ -1,4 +1,4 @@
-#include "core/IPlugin.h"
+﻿#include "core/IPlugin.h"
 #include "core/IDBEngine.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
@@ -6,7 +6,7 @@
 #include <string>
 
 // ============================================================
-// PCB数据库引擎实现（简化示例）
+// PCB鏁版嵁搴撳紩鎿庡疄鐜帮紙绠€鍖栫ず渚嬶級
 // ============================================================
 class PCBDBEngine : public IDBEngine {
 public:
@@ -35,7 +35,7 @@ private:
 };
 
 // ============================================================
-// PCBDBPlugin：纯DB插件（DB_ONLY），注册 Layout 菜单 Actions
+// PCBDBPlugin锛氱函DB鎻掍欢锛圖B_ONLY锛夛紝娉ㄥ唽 Layout 鑿滃崟 Actions
 // ============================================================
 class PCBDBPlugin : public IPlugin {
 public:
@@ -45,12 +45,12 @@ public:
             "1.0.0",
             "PCB Database Plugin: Layer/Cell/DRC/Net management",
             PluginType::DB_ONLY,
-            {}  // 无依赖
+            {}  // 鏃犱緷璧?
         };
     }
 
     bool isCompatible(RunMode /*mode*/) const override {
-        return true; // DB_ONLY 在所有模式下均可用
+        return true; // DB_ONLY 鍦ㄦ墍鏈夋ā寮忎笅鍧囧彲鐢?
     }
 
     bool initialize(RunMode mode) override {
@@ -127,7 +127,7 @@ private:
 };
 
 // ============================================================
-// 导出函数
+// 瀵煎嚭鍑芥暟
 // ============================================================
 extern "C" {
     IPlugin* createPlugin()         { return new PCBDBPlugin(); }

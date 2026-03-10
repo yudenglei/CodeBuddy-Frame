@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <functional>
 #include <unordered_map>
@@ -6,63 +6,50 @@
 #include <stdexcept>
 #include "ActionContext.h"
 
-/// @brief Action描述符
-/// 注册时携带所有元信息，包括菜单插入位置
-struct ActionDescriptor {
-    std::string id;           ///< 唯一ID，如 "Desktop.Save"
-    std::string label;        ///< 菜单/按钮显示文字
-    std::string tooltip;      ///< 工具提示
-    std::string iconPath;     ///< 图标资源路径（可选）
-    std::string shortcut;     ///< 快捷键，如 "Ctrl+S"
-    /// 菜单插入路径，格式：
-    ///   "desktop_menu/file_group"          - 插入到file_group末尾
-    ///   "desktop_menu/file_group/before:save_action" - 在save_action前插入
-    ///   "---"                              - 分隔符节点
-    std::string menuPath;
-    std::function<void(const ActionContext&)> callback; ///< 执行回调
+// ============================================================================
+// RibbonInfo - 宸ュ叿鏍忥紙Ribbon锛変俊鎭?// ============================================================================
+
+/// @brief 宸ュ叿鏍忔寜閽ぇ灏忕被鍨?enum class ToolButtonSize {
+    Large,      ///< 澶ф寜閽細鍥炬爣鍦ㄤ笂锛屾枃瀛楀湪涓嬶紙32x32鍥炬爣锛?    Small,      ///< 灏忔寜閽細鍥炬爣鍦ㄥ乏锛屾枃瀛楀湪鍙筹紙16x16鍥炬爣锛?    IconOnly    ///< 浠呭浘鏍囷細鏃犳枃瀛?};
+
+/// @brief 宸ュ叿鏍?Ribbon淇℃伅
+/// 鎻掍欢閫氳繃姝ょ粨鏋勬敞鍐屽伐鍏锋爮鎸夐挳
+struct RibbonInfo {
+    std::string tabId;           ///< 鎵€灞濼ab ID锛堝 "Draw", "Modeler", "HFSS"锛?    std::string tabTitle;        ///< Tab鏄剧ず鏍囬锛堝 "缁樺埗", "寤烘ā"锛?    std::string groupId;         ///< 鎵€灞濭roup ID锛堝 "Primitives", "Boolean"锛?    std::string groupTitle;      ///< Group鏄剧ず鏍囬锛堝 "鍩烘湰浣?, "甯冨皵杩愮畻"锛?    ToolButtonSize size{ToolButtonSize::Large}; ///< 鎸夐挳澶у皬
+    int tabOrder{0};            ///< Tab鎺掑簭锛堣秺灏忚秺闈犲墠锛?    int groupOrder{0};          ///< Group鎺掑簭锛堣秺灏忚秺闈犲墠锛?    int itemOrder{0};           ///< 鎸夐挳鍦℅roup鍐呮帓搴?    bool isSplitButton{false};  ///< 鏄惁涓哄垎瑁傛寜閽紙涓嬫媺鑿滃崟锛?    std::vector<std::string> splitItems; ///< 鍒嗚鎸夐挳鐨勫瓙椤笽D鍒楄〃
 };
 
-/// @brief ActionManager — 统一Action注册与调用枢纽（单例，参考KLayout）
-///
-/// 三条调用路径均通过 invoke(id) 统一触发：
-///   GUI菜单点击  → UIActionBridge → invoke()
-///   Python脚本   → am.invoke("id")
-///   gRPC请求     → PluginServiceImpl → invoke()
+/// @brief Action鎻忚堪绗︼紙鎵╁睍鐗堬級
+/// 娉ㄥ唽鏃舵惡甯︽墍鏈夊厓淇℃伅锛屽寘鎷彍鍗曟彃鍏ヤ綅缃拰宸ュ叿鏍忛厤缃?struct ActionDescriptor {
+    std::string id;
+    std::string label;
+    std::string tooltip;
+    std::string iconPath;
+    std::string shortcut;
+    std::string menuPath;
+    RibbonInfo ribbon;
+    std::function<void(const ActionContext&)> callback;
+    
+    ActionDescriptor() = default;
+};
+
 class ActionManager {
 public:
-    /// @brief 获取全局单例
     static ActionManager& instance();
-
-    // 禁止拷贝/移动
     ActionManager(const ActionManager&) = delete;
     ActionManager& operator=(const ActionManager&) = delete;
 
-    /// @brief 注册Action（重复ID则覆盖，并通知所有Observer）
     void registerAction(const ActionDescriptor& desc);
-
-    /// @brief 触发Action（O(1)查找）
-    /// @throws std::runtime_error 若id不存在
     void invoke(const std::string& id, const ActionContext& ctx = {});
-
-    /// @brief 更新快捷键
     void setShortcut(const std::string& id, const std::string& shortcut);
-
-    /// @brief 查询单个Action描述符（找不到返回nullptr）
     const ActionDescriptor* findAction(const std::string& id) const;
-
-    /// @brief 获取所有已注册Action列表（按注册顺序）
     std::vector<ActionDescriptor> listActions() const;
-
-    /// @brief 注册Observer：当有新Action注册时回调（UI层用于自动构建菜单）
     void onActionRegistered(std::function<void(const ActionDescriptor&)> cb);
-
-    /// @brief 清空所有注册（测试用）
     void clear();
 
 private:
     ActionManager() = default;
-
     std::unordered_map<std::string, ActionDescriptor> actions_;
-    std::vector<std::string> registrationOrder_;   ///< 保持注册顺序
+    std::vector<std::string> registrationOrder_;
     std::vector<std::function<void(const ActionDescriptor&)>> observers_;
 };

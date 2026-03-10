@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifdef CAE_ENABLE_GUI
 
 #include <QMainWindow>
@@ -6,39 +6,45 @@
 #include <QMenu>
 #include <QStatusBar>
 #include <QLabel>
+#include <QToolBar>
 #include <memory>
 
 class MenuBuilder;
+class RibbonBar;
 
-/// @brief CAE主窗口（参考HFSS 3D Layout界面风格）
-///
-/// 菜单结构：
-///   Desktop | View | Layout | Tools
-///
-/// 菜单内容由插件通过 ActionManager::registerAction() 动态注入，
-/// MenuBuilder 监听 onActionRegistered 事件后自动创建 QAction 并插入菜单。
+/// @brief CAE涓荤獥鍙ｏ紙鍙傝€傾NSYS Electronics Desktop鐣岄潰椋庢牸锛?///
+/// 鐣岄潰甯冨眬锛?///   鑿滃崟鏍?| 蹇嵎宸ュ叿鏍?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+///   Ribbon宸ュ叿鏍忥紙Tab+Group锛?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+///   涓績宸ヤ綔鍖?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+///   鐘舵€佹爮
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
-    /// @brief 获取顶层菜单（供插件或测试使用）
+    /// @brief 鑾峰彇椤跺眰鑿滃崟锛堜緵鎻掍欢鎴栨祴璇曚娇鐢級
     QMenu* getMenu(const std::string& menuName) const;
 
-    /// @brief 获取MenuBuilder实例（供UIActionBridge使用）
-    MenuBuilder* getMenuBuilder() const;
+    /// @brief 鑾峰彇MenuBuilder瀹炰緥锛堜緵UIActionBridge浣跨敤锛?    MenuBuilder* getMenuBuilder() const;
+
+    /// @brief 鑾峰彇RibbonBar瀹炰緥
+    RibbonBar* getRibbonBar() const;
 
 protected:
     void closeEvent(QCloseEvent* event) override;
 
 private:
     void setupMenuBar();
+    void setupQuickToolBar();
+    void setupRibbonBar();
     void setupStatusBar();
     void setupCentralWidget();
 
     std::unique_ptr<MenuBuilder> menuBuilder_;
-    QLabel* statusLabel_{nullptr};
+    std::unique_ptr<RibbonBar> ribbonBar_;
+    QToolBar* quickToolBar_;
+    QLabel* statusLabel_;
 };
 
 #endif // CAE_ENABLE_GUI

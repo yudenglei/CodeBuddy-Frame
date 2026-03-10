@@ -1,22 +1,21 @@
-/// @file main_headless.cpp
-/// @brief 无界面（Headless）模式入口
-///
-/// 用法示例：
-///   cae_headless --plugins=./plugins --action=Layout.RunDRC
+﻿/// @file main_headless.cpp
+/// @brief 鏃犵晫闈紙Headless锛夋ā寮忓叆鍙?///
+/// 鐢ㄦ硶绀轰緥锛?///   cae_headless --plugins=./plugins --action=Layout.RunDRC
 ///   cae_headless --plugins=./plugins --action=Desktop.Save --param=path=/tmp/out.pcb
 
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
 #include "core/RunMode.h"
+#include "core/IPluginManager.h"
 #include <iostream>
 #include <string>
 #include <memory>
 #include <map>
 
-class IPluginManager;
+// PluginManager 宸ュ巶鍑芥暟锛堝湪 PluginManager.cpp 涓畾涔夛級
 std::unique_ptr<IPluginManager> createPluginManager();
 
-/// @brief 简单命令行参数解析
+/// @brief 绠€鍗曞懡浠よ鍙傛暟瑙ｆ瀽
 std::map<std::string, std::string> parseArgs(int argc, char* argv[]) {
     std::map<std::string, std::string> args;
     for (int i = 1; i < argc; ++i) {
@@ -40,7 +39,7 @@ int main(int argc, char* argv[]) {
     std::cout << "[Headless] Starting CAE in headless mode\n";
     std::cout << "[Headless] Plugins dir: " << pluginsDir << "\n";
 
-    // 加载插件
+    // 鍔犺浇鎻掍欢
     auto pluginMgr = createPluginManager();
     pluginMgr->discover(pluginsDir);
     pluginMgr->initializeAll(RunMode::HEADLESS);
@@ -52,8 +51,7 @@ int main(int argc, char* argv[]) {
 
         ActionContext ctx;
         ctx.sourceMode = RunMode::HEADLESS;
-        // 将额外 --param=key:value 参数加入上下文
-        for (const auto& [k, v] : args) {
+        // 灏嗛澶?--param=key:value 鍙傛暟鍔犲叆涓婁笅鏂?        for (const auto& [k, v] : args) {
             if (k != "plugins" && k != "action") {
                 ctx.params[k] = v;
             }
@@ -67,7 +65,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
     } else {
-        // 无 --action 时列出所有可用 Actions
+        // 鏃?--action 鏃跺垪鍑烘墍鏈夊彲鐢?Actions
         std::cout << "[Headless] Available actions:\n";
         for (const auto& desc : ActionManager::instance().listActions()) {
             std::cout << "  " << desc.id;

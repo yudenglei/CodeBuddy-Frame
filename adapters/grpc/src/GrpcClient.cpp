@@ -1,5 +1,5 @@
-/// @file GrpcClient.cpp
-/// @brief gRPC 客户端示例（用于集成测试和远程调用演示）
+﻿/// @file GrpcClient.cpp
+/// @brief gRPC 瀹㈡埛绔ず渚嬶紙鐢ㄤ簬闆嗘垚娴嬭瘯鍜岃繙绋嬭皟鐢ㄦ紨绀猴級
 
 #ifdef CAE_ENABLE_GRPC
 
@@ -8,16 +8,16 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
-/// @brief PluginService gRPC 客户端
-class PluginServiceClient {
+/// @brief PluginService gRPC 瀹㈡埛绔?class PluginServiceClient {
 public:
     explicit PluginServiceClient(const std::string& serverAddress)
         : stub_(cae::PluginService::NewStub(
               grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials())))
     {}
 
-    /// @brief 触发远程 Action
+    /// @brief 瑙﹀彂杩滅▼ Action
     bool executeAction(const std::string& actionId,
                        const std::unordered_map<std::string, std::string>& params = {}) {
         cae::ExecuteActionRequest request;
@@ -26,9 +26,11 @@ public:
             (*request.mutable_params())[k] = v;
         }
 
+
         cae::ExecuteActionResponse response;
         grpc::ClientContext context;
         grpc::Status status = stub_->ExecuteAction(&context, request, &response);
+
 
         if (!status.ok()) {
             std::cerr << "[GrpcClient] ExecuteAction RPC failed: "
@@ -36,25 +38,30 @@ public:
             return false;
         }
 
+
         std::cout << "[GrpcClient] Action '" << actionId << "' result: "
                   << (response.success() ? "OK" : "FAIL")
                   << " - " << response.message() << "\n";
         return response.success();
     }
 
-    /// @brief 列出所有远程 Actions
+
+    /// @brief 鍒楀嚭鎵€鏈夎繙绋?Actions
     void listActions(const std::string& prefix = "") {
         cae::ListActionsRequest request;
         request.set_filter_prefix(prefix);
+
 
         cae::ListActionsResponse response;
         grpc::ClientContext context;
         grpc::Status status = stub_->ListActions(&context, request, &response);
 
+
         if (!status.ok()) {
             std::cerr << "[GrpcClient] ListActions RPC failed\n";
             return;
         }
+
 
         std::cout << "[GrpcClient] Available actions (" << response.actions_size() << "):\n";
         for (const auto& action : response.actions()) {
@@ -63,6 +70,7 @@ public:
             std::cout << " - " << action.label() << "\n";
         }
     }
+
 
 private:
     std::unique_ptr<cae::PluginService::Stub> stub_;

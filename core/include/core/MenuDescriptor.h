@@ -1,27 +1,27 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <vector>
 
-/// @brief 菜单节点信息（解析menuPath后的结果）
+/// @brief 鑿滃崟鑺傜偣淇℃伅锛堣В鏋恗enuPath鍚庣殑缁撴灉锛?
 struct MenuInsertInfo {
-    std::vector<std::string> menuHierarchy;  ///< 菜单层级，如 ["Desktop", "File"]
-    std::string insertPosition;              ///< 插入位置：""=末尾 / "before:id" / "after:id"
-    bool isSeparator{false};                 ///< 是否为分隔符节点
+    std::vector<std::string> menuHierarchy;  ///< 鑿滃崟灞傜骇锛屽 ["Desktop", "File"]
+    std::string insertPosition;              ///< 鎻掑叆浣嶇疆锛?"=鏈熬 / "before:id" / "after:id"
+    bool isSeparator{false};                 ///< 鏄惁涓哄垎闅旂鑺傜偣
 };
 
-/// @brief 菜单路径解析工具
-/// 将 menuPath 字符串解析为结构化的插入信息
+/// @brief 鑿滃崟璺緞瑙ｆ瀽宸ュ叿
+/// 灏?menuPath 瀛楃涓茶В鏋愪负缁撴瀯鍖栫殑鎻掑叆淇℃伅
 class MenuDescriptor {
 public:
-    /// @brief 解析 menuPath 字符串
-    /// 格式示例：
-    ///   "desktop_menu"                           → Desktop菜单末尾
-    ///   "desktop_menu/file_group"                → Desktop/File组末尾
-    ///   "view_menu/before:zoom_out"              → View菜单中zoom_out前
-    ///   "---"                                    → 分隔符
+    /// @brief 瑙ｆ瀽 menuPath 瀛楃涓?
+    /// 鏍煎紡绀轰緥锛?
+    ///   "desktop_menu"                           鈫?Desktop鑿滃崟鏈熬
+    ///   "desktop_menu/file_group"                鈫?Desktop/File缁勬湯灏?
+    ///   "view_menu/before:zoom_out"              鈫?View鑿滃崟涓瓃oom_out鍓?
+    ///   "---"                                    鈫?鍒嗛殧绗?
     static MenuInsertInfo parse(const std::string& menuPath);
 
-    /// @brief 将menu_path风格的名称转换为显示名称
-    /// 如 "desktop_menu" → "Desktop", "file_group" → "File"
+    /// @brief 灏唌enu_path椋庢牸鐨勫悕绉拌浆鎹负鏄剧ず鍚嶇О
+    /// 濡?"desktop_menu" 鈫?"Desktop", "file_group" 鈫?"File"
     static std::string toDisplayName(const std::string& pathSegment);
 };

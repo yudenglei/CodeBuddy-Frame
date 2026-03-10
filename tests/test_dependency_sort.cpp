@@ -1,5 +1,5 @@
-/// @file test_dependency_sort.cpp
-/// @brief Kahn拓扑排序验证：正常依赖链、循环依赖异常
+﻿/// @file test_dependency_sort.cpp
+/// @brief Kahn鎷撴墤鎺掑簭楠岃瘉锛氭甯镐緷璧栭摼銆佸惊鐜緷璧栧紓甯?
 
 #include <gtest/gtest.h>
 #include <vector>
@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-// ---- 复制 PluginManager 中的 Kahn 排序逻辑用于独立测试 ----
+// ---- 澶嶅埗 PluginManager 涓殑 Kahn 鎺掑簭閫昏緫鐢ㄤ簬鐙珛娴嬭瘯 ----
 struct MockPlugin {
     std::string name;
     std::vector<std::string> deps;
@@ -49,28 +49,28 @@ std::vector<std::string> kahnSort(const std::vector<MockPlugin>& plugins) {
     return sorted;
 }
 
-// ---- 测试：无依赖，顺序任意 ----
+// ---- 娴嬭瘯锛氭棤渚濊禆锛岄『搴忎换鎰?----
 TEST(DependencySortTest, NoDependencies) {
     std::vector<MockPlugin> plugins = {{"A", {}}, {"B", {}}, {"C", {}}};
     auto sorted = kahnSort(plugins);
     EXPECT_EQ(sorted.size(), 3u);
-    // 所有节点都应出现
+    // 鎵€鏈夎妭鐐归兘搴斿嚭鐜?
     EXPECT_NE(std::find(sorted.begin(), sorted.end(), "A"), sorted.end());
     EXPECT_NE(std::find(sorted.begin(), sorted.end(), "B"), sorted.end());
     EXPECT_NE(std::find(sorted.begin(), sorted.end(), "C"), sorted.end());
 }
 
-// ---- 测试：B依赖A，A必须在B前 ----
+// ---- 娴嬭瘯锛欱渚濊禆A锛孉蹇呴』鍦˙鍓?----
 TEST(DependencySortTest, SimpleDependency) {
     std::vector<MockPlugin> plugins = {{"B", {"A"}}, {"A", {}}};
     auto sorted = kahnSort(plugins);
     EXPECT_EQ(sorted.size(), 2u);
     auto posA = std::find(sorted.begin(), sorted.end(), "A");
     auto posB = std::find(sorted.begin(), sorted.end(), "B");
-    EXPECT_LT(posA, posB); // A 在 B 前面
+    EXPECT_LT(posA, posB); // A 鍦?B 鍓嶉潰
 }
 
-// ---- 测试：链式依赖 C→B→A，顺序必须 A B C ----
+// ---- 娴嬭瘯锛氶摼寮忎緷璧?C鈫払鈫扐锛岄『搴忓繀椤?A B C ----
 TEST(DependencySortTest, ChainDependency) {
     std::vector<MockPlugin> plugins = {
         {"C", {"B"}},
@@ -84,7 +84,7 @@ TEST(DependencySortTest, ChainDependency) {
     EXPECT_EQ(sorted[2], "C");
 }
 
-// ---- 测试：pcb_analysis 依赖 pcb_db（实际场景）----
+// ---- 娴嬭瘯锛歱cb_analysis 渚濊禆 pcb_db锛堝疄闄呭満鏅級----
 TEST(DependencySortTest, PCBAnalysisDependsOnPCBDB) {
     std::vector<MockPlugin> plugins = {
         {"pcb_analysis", {"pcb_db"}},
@@ -96,10 +96,10 @@ TEST(DependencySortTest, PCBAnalysisDependsOnPCBDB) {
 
     auto posDB  = std::find(sorted.begin(), sorted.end(), "pcb_db");
     auto posAN  = std::find(sorted.begin(), sorted.end(), "pcb_analysis");
-    EXPECT_LT(posDB, posAN); // pcb_db 必须在 pcb_analysis 之前
+    EXPECT_LT(posDB, posAN); // pcb_db 蹇呴』鍦?pcb_analysis 涔嬪墠
 }
 
-// ---- 测试：循环依赖应抛出异常 ----
+// ---- 娴嬭瘯锛氬惊鐜緷璧栧簲鎶涘嚭寮傚父 ----
 TEST(DependencySortTest, CircularDependencyThrows) {
     std::vector<MockPlugin> plugins = {
         {"A", {"B"}},
@@ -108,7 +108,7 @@ TEST(DependencySortTest, CircularDependencyThrows) {
     EXPECT_THROW(kahnSort(plugins), std::runtime_error);
 }
 
-// ---- 测试：自依赖应抛出异常 ----
+// ---- 娴嬭瘯锛氳嚜渚濊禆搴旀姏鍑哄紓甯?----
 TEST(DependencySortTest, SelfDependencyThrows) {
     std::vector<MockPlugin> plugins = {{"A", {"A"}}};
     EXPECT_THROW(kahnSort(plugins), std::runtime_error);
