@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <functional>
 #include <unordered_map>
@@ -7,20 +7,34 @@
 #include "ActionContext.h"
 
 // ============================================================================
-// RibbonInfo - 宸ュ叿鏍忥紙Ribbon锛変俊鎭?// ============================================================================
+// RibbonInfo - 工具栏（Ribbon）信息
+// ============================================================================
 
-/// @brief 宸ュ叿鏍忔寜閽ぇ灏忕被鍨?enum class ToolButtonSize {
-    Large,      ///< 澶ф寜閽細鍥炬爣鍦ㄤ笂锛屾枃瀛楀湪涓嬶紙32x32鍥炬爣锛?    Small,      ///< 灏忔寜閽細鍥炬爣鍦ㄥ乏锛屾枃瀛楀湪鍙筹紙16x16鍥炬爣锛?    IconOnly    ///< 浠呭浘鏍囷細鏃犳枃瀛?};
-
-/// @brief 宸ュ叿鏍?Ribbon淇℃伅
-/// 鎻掍欢閫氳繃姝ょ粨鏋勬敞鍐屽伐鍏锋爮鎸夐挳
-struct RibbonInfo {
-    std::string tabId;           ///< 鎵€灞濼ab ID锛堝 "Draw", "Modeler", "HFSS"锛?    std::string tabTitle;        ///< Tab鏄剧ず鏍囬锛堝 "缁樺埗", "寤烘ā"锛?    std::string groupId;         ///< 鎵€灞濭roup ID锛堝 "Primitives", "Boolean"锛?    std::string groupTitle;      ///< Group鏄剧ず鏍囬锛堝 "鍩烘湰浣?, "甯冨皵杩愮畻"锛?    ToolButtonSize size{ToolButtonSize::Large}; ///< 鎸夐挳澶у皬
-    int tabOrder{0};            ///< Tab鎺掑簭锛堣秺灏忚秺闈犲墠锛?    int groupOrder{0};          ///< Group鎺掑簭锛堣秺灏忚秺闈犲墠锛?    int itemOrder{0};           ///< 鎸夐挳鍦℅roup鍐呮帓搴?    bool isSplitButton{false};  ///< 鏄惁涓哄垎瑁傛寜閽紙涓嬫媺鑿滃崟锛?    std::vector<std::string> splitItems; ///< 鍒嗚鎸夐挳鐨勫瓙椤笽D鍒楄〃
+/// @brief 工具栏按钮大小类型
+enum class ToolButtonSize {
+    Large,      ///< 大按钮：图标在上，文字在下（32x32图标）
+    Small,      ///< 小按钮：图标在左，文字在右（16x16图标）
+    IconOnly    ///< 仅图标：无文字
 };
 
-/// @brief Action鎻忚堪绗︼紙鎵╁睍鐗堬級
-/// 娉ㄥ唽鏃舵惡甯︽墍鏈夊厓淇℃伅锛屽寘鎷彍鍗曟彃鍏ヤ綅缃拰宸ュ叿鏍忛厤缃?struct ActionDescriptor {
+/// @brief 工具栏/Ribbon信息
+/// 插件通过此结构注册工具栏按钮
+struct RibbonInfo {
+    std::string tabId;           ///< 所属Tab ID（如 "Draw", "Modeler", "HFSS"）
+    std::string tabTitle;        ///< Tab显示标题（如 "绘制", "建模"）
+    std::string groupId;         ///< 所属Group ID（如 "Primitives", "Boolean"）
+    std::string groupTitle;      ///< Group显示标题（如 "基本体", "布尔运算"）
+    ToolButtonSize size{ToolButtonSize::Large}; ///< 按钮大小
+    int tabOrder{0};            ///< Tab排序（越小越靠前）
+    int groupOrder{0};          ///< Group排序（越小越靠前）
+    int itemOrder{0};           ///< 按钮在Group内排序
+    bool isSplitButton{false};  ///< 是否为分裂按钮（下拉菜单）
+    std::vector<std::string> splitItems; ///< 分裂按钮的子项ID列表
+};
+
+/// @brief Action描述符（扩展版）
+/// 注册时携带所有元信息，包括菜单插入位置和工具栏配置
+struct ActionDescriptor {
     std::string id;
     std::string label;
     std::string tooltip;

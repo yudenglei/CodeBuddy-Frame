@@ -1,26 +1,30 @@
-﻿#pragma once
+#pragma once
 #ifdef CAE_ENABLE_GUI
 
 #include "core/PluginGlobal.h"
 #include "core/ActionManager.h"
 
-// 鍓嶅悜澹版槑閬垮厤寰幆渚濊禆
+// 前向声明避免循环依赖
 class MainWindow;
 
-/// @brief UI鎻掍欢鎵╁睍鎺ュ彛
-/// UI_ONLY鍜孒YBRID绫诲瀷鐨勬彃浠跺疄鐜版鎺ュ彛浠ヨ础鐚甎I鍏冪礌
+/// @brief UI插件扩展接口
+/// UI_ONLY和HYBRID类型的插件实现此接口以贡献UI元素
 /// 
-/// 浣跨敤鏂规硶锛?/// 1. 鎻掍欢鍦?initialize() 闃舵琚瘑鍒负 IUIPlugin 绫诲瀷
-/// 2. 瀹夸富绋嬪簭璋冪敤 setupUI(mainWindow) 浼犲叆涓荤獥鍙ｆ寚閽?/// 3. 鎻掍欢鍦?setupUI 涓繚瀛?mainWindow 鎸囬拡锛屽苟鍒涘缓UI鍏冪礌
-/// 4. 鎻掍欢鍦?teardownUI 涓竻鐞哢I鍏冪礌
+/// 使用方法：
+/// 1. 插件在 initialize() 阶段被识别为 IUIPlugin 类型
+/// 2. 宿主程序调用 setupUI(mainWindow) 传入主窗口指针
+/// 3. 插件在 setupUI 中保存 mainWindow 指针，并创建UI元素
+/// 4. 插件在 teardownUI 中清理UI元素
 class CAE_PLUGIN_EXPORT IUIPlugin {
 public:
     virtual ~IUIPlugin() = default;
 
-    /// @brief 鎻掍欢鍚戜富绐楀彛娉ㄥ叆UI鍏冪礌锛堥潰鏉裤€佸仠闈犵獥鍙ｇ瓑锛?    /// @param mainWindow 涓荤獥鍙ｆ寚閽堬紝鎻掍欢搴斾繚瀛樻鎸囬拡鐢ㄤ簬鍒涘缓瀵硅瘽妗嗙瓑
+    /// @brief 插件向主窗口注入UI元素（面板、停靠窗口等）
+    /// @param mainWindow 主窗口指针，插件应保存此指针用于创建对话框等
     virtual void setupUI(MainWindow* mainWindow) = 0;
 
-    /// @brief 鎻掍欢绉婚櫎鍏禪I鍏冪礌锛堝叧闂椂璋冪敤锛?    virtual void teardownUI() = 0;
+    /// @brief 插件移除其UI元素（关闭时调用）
+    virtual void teardownUI() = 0;
 };
 
 #endif // CAE_ENABLE_GUI

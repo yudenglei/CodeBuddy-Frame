@@ -1,4 +1,4 @@
-﻿#ifdef CAE_ENABLE_GUI
+#ifdef CAE_ENABLE_GUI
 #include "ui/MainWindow.h"
 #include "ui/MenuBuilder.h"
 #include "ui/RibbonBar.h"
@@ -30,9 +30,10 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::setupMenuBar() {
     menuBuilder_ = std::make_unique<MenuBuilder>(menuBar(), this);
-    // 棰勫缓椤跺眰鑿滃崟锛圓NSYS椋庢牸锛?    menuBuilder_->buildTopLevelMenus();
+    // 预建顶层菜单（ANSYS风格）
+    menuBuilder_->buildTopLevelMenus();
 
-    // 娉ㄥ唽 Observer锛氭彃浠跺姞杞芥椂娉ㄥ唽鐨?Action 鑷姩鎻掑叆鑿滃崟
+    // 注册 Observer：插件加载时注册的 Action 自动插入菜单
     ActionManager::instance().onActionRegistered(
         [this](const ActionDescriptor& desc) {
             menuBuilder_->insertAction(desc);
@@ -41,7 +42,7 @@ void MainWindow::setupMenuBar() {
 }
 
 void MainWindow::setupQuickToolBar() {
-    // 蹇嵎宸ュ叿鏍忥紙浼犵粺宸ュ叿鏍忥紝浣嶄簬鑿滃崟鏍忎笅鏂癸級
+    // 快捷工具栏（传统工具栏，位于菜单栏下方）
     quickToolBar_ = addToolBar("Quick Access");
     quickToolBar_->setMovable(false);
     quickToolBar_->setIconSize(QSize(24, 24));
@@ -66,7 +67,7 @@ void MainWindow::setupQuickToolBar() {
         }
     )");
     
-    // 娣诲姞榛樿蹇嵎鎿嶄綔
+    // 添加默认快捷操作
     QAction* saveAction = quickToolBar_->addAction(QIcon(), "Save");
     saveAction->setToolTip("Save (Ctrl+S)");
     quickToolBar_->addSeparator();
@@ -83,18 +84,24 @@ void MainWindow::setupQuickToolBar() {
 }
 
 void MainWindow::setupRibbonBar() {
-    // Ribbon宸ュ叿鏍忥紙ANSYS椋庢牸锛?    ribbonBar_ = std::make_unique<RibbonBar>(this);
+    // Ribbon工具栏（ANSYS风格）
+    ribbonBar_ = std::make_unique<RibbonBar>(this);
     
-    // 灏哛ibbon鏀惧湪蹇嵎宸ュ叿鏍忎笅鏂?    // 娉ㄦ剰锛氭垜浠渶瑕佸垱寤轰竴涓鍣?    // 瀹為檯涓婏紝RibbonBar宸茬粡鏄竴涓嫭绔媤idget
-    // 杩欓噷鎴戜滑閫氳繃setCentralWidget鐨勬浛浠ｆ柟妗?    
-    // 鍒涘缓涓诲鍣?    QWidget* centralContainer = new QWidget(this);
+    // 将Ribbon放在快捷工具栏下方
+    // 注意：我们需要创建一个容器
+    // 实际上，RibbonBar已经是一个独立widget
+    // 这里我们通过setCentralWidget的替代方案
+    
+    // 创建主容器
+    QWidget* centralContainer = new QWidget(this);
     QVBoxLayout* containerLayout = new QVBoxLayout(centralContainer);
     containerLayout->setContentsMargins(0, 0, 0, 0);
     containerLayout->setSpacing(0);
     
-    // 娣诲姞Ribbon锛堟浛浠ｅ師鏉ョ殑鑿滃崟鏍?宸ュ叿鏍忓竷灞€锛?    containerLayout->addWidget(ribbonBar_.get());
+    // 添加Ribbon（替代原来的菜单栏+工具栏布局）
+    containerLayout->addWidget(ribbonBar_.get());
     
-    // 娣诲姞涓績鍖哄煙
+    // 添加中心区域
     auto* central = new QWidget(this);
     auto* label = new QLabel("PCB Layout View\n(Plugin area)", central);
     label->setAlignment(Qt::AlignCenter);
@@ -116,7 +123,8 @@ void MainWindow::setupStatusBar() {
 }
 
 void MainWindow::setupCentralWidget() {
-    // 涓績鍖哄煙宸插湪setupRibbonBar涓缃?}
+    // 中心区域已在setupRibbonBar中设置
+}
 
 QMenu* MainWindow::getMenu(const std::string& menuName) const {
     return menuBuilder_ ? menuBuilder_->getTopMenu(menuName) : nullptr;
@@ -131,7 +139,8 @@ RibbonBar* MainWindow::getRibbonBar() const {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    // 鍙戝嚭鍏抽棴淇″彿锛屾彃浠跺彲鐩戝惉姝や俊鍙蜂繚瀛樻暟鎹?    ActionManager::instance().invoke("Desktop.Exit");
+    // 发出关闭信号，插件可监听此信号保存数据
+    ActionManager::instance().invoke("Desktop.Exit");
     event->accept();
 }
 

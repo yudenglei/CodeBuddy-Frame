@@ -1,22 +1,24 @@
-﻿#ifdef CAE_ENABLE_GUI
+#ifdef CAE_ENABLE_GUI
 #include "ui/MenuBuilder.h"
 #include "ui/UIActionBridge.h"
 #include "core/MenuDescriptor.h"
 #include <QAction>
 #include <iostream>
 
-// 鍏ㄥ眬 UIActionBridge锛堢敓鍛藉懆鏈熶笌 MenuBuilder 鐩稿悓锛?static UIActionBridge* gBridge = nullptr;
+// 全局 UIActionBridge（生命周期与 MenuBuilder 相同）
+static UIActionBridge* gBridge = nullptr;
 
 MenuBuilder::MenuBuilder(QMenuBar* menuBar, QObject* parent)
     : QObject(parent), menuBar_(menuBar)
 {
-    // 鍒涘缓鍏ㄥ眬妗ユ帴鍣?    if (!gBridge) {
+    // 创建全局桥接器
+    if (!gBridge) {
         gBridge = new UIActionBridge(this);
     }
 }
 
 void MenuBuilder::buildTopLevelMenus() {
-    // ANSYS Electronics Desktop 椋庢牸椤跺眰鑿滃崟
+    // ANSYS Electronics Desktop 风格顶层菜单
     struct TopMenu { const char* path; const char* title; };
     const TopMenu menus[] = {
         {"File", "&File"},
@@ -34,7 +36,7 @@ void MenuBuilder::buildTopLevelMenus() {
     for (const auto& m : menus) {
         QMenu* menu = menuBar_->addMenu(m.title);
         topMenus_[m.path] = menu;
-        // 鍚屾椂鐢?displayName 浣滀负 key 鏂逛究 getTopMenu 鏌ヨ
+        // 同时用 displayName 作为 key 方便 getTopMenu 查询
         topMenus_[MenuDescriptor::toDisplayName(m.path)] = menu;
     }
 }
@@ -42,39 +44,43 @@ void MenuBuilder::buildTopLevelMenus() {
 void MenuBuilder::insertAction(const ActionDescriptor& desc) {
     if (desc.menuPath.empty()) return;
 
-    // 鍒嗛殧绗﹀鐞?    if (desc.menuPath == "---") {
-        // 鐙珛鍒嗛殧绗﹂渶瑕佸湪鍚勪釜鑿滃崟涓崟鐙鐞?        return;
+    // 分隔符处理
+    if (desc.menuPath == "---") {
+        // 独立分隔符需要在各个菜单中单独处理
+        return;
     }
 
-    // 瑙ｆ瀽menuPath鑾峰彇鐩爣鑿滃崟
+    // 解析menuPath获取目标菜单
     QMenu* targetMenu = resolveMenu(desc.menuPath);
     if (!targetMenu) {
         std::cerr << "[MenuBuilder] Cannot resolve menuPath: " << desc.menuPath << "\n";
         return;
     }
 
-    // 閫氳繃 UIActionBridge 鍒涘缓 QAction
+    // 通过 UIActionBridge 创建 QAction
     QAction* action = gBridge->createQAction(desc, targetMenu);
     actionMap_[desc.id] = action;
 
-    // 瑙ｆ瀽鎻掑叆浣嶇疆
+    // 解析插入位置
     auto info = MenuDescriptor::parse(desc.menuPath);
     insertIntoMenu(targetMenu, action, info.insertPosition);
 }
 
 QMenu* MenuBuilder::resolveMenu(const std::string& menuPath) {
-    // 鍏堟鏌ョ紦瀛?    auto it = menuPathCache_.find(menuPath);
+    // 先检查缓存
+    auto it = menuPathCache_.find(menuPath);
     if (it != menuPathCache_.end()) {
         return it->second;
     }
 
-    // 瑙ｆ瀽璺緞
+    // 解析路径
     QList<QMenu*> menus = resolveMenuPath(menuPath);
     if (menus.isEmpty()) {
         return nullptr;
     }
 
-    // 杩斿洖鏈€鍚庝竴绾ц彍鍗?    QMenu* result = menus.last();
+    // 返回最后一级菜单
+    QMenu* result = menus.last();
     menuPathCache_[menuPath] = result;
     return result;
 }
@@ -82,7 +88,8 @@ QMenu* MenuBuilder::resolveMenu(const std::string& menuPath) {
 QList<QMenu*> MenuBuilder::resolveMenuPath(const std::string& menuPath) {
     QList<QMenu*> result;
     
-    // 瑙ｆ瀽璺緞娈?    std::vector<std::string> segments;
+    // 解析路径段
+    std::vector<std::string> segments;
     std::string current;
     for (char c : menuPath) {
         if (c == '/') {
@@ -95,7 +102,8 @@ QList<QMenu*> MenuBuilder::resolveMenuPath(const std::string& menuPath) {
         }
     }
     if (!current.empty()) {
-        // 鎺掗櫎鏈熬鐨?before:/after:/--- 绛夋爣璁?        if (current.find("before:") != 0 && 
+        // 排除末尾的 before:/after:/--- 等标记
+        if (current.find("before:") != 0 && 
             current.find("after:") != 0 &&
             current != "---") {
             segments.push_back(current);
@@ -106,26 +114,29 @@ QList<QMenu*> MenuBuilder::resolveMenuPath(const std::string& menuPath) {
         return result;
     }
 
-    // 浠庨《灞傝彍鍗曞紑濮?    QString topKey = QString::fromStdString(segments[0]).toLower();
+    // 从顶层菜单开始
+    QString topKey = QString::fromStdString(segments[0]).toLower();
     QMenu* currentMenu = nullptr;
 
-    // 鏌ユ壘椤跺眰鑿滃崟
+    // 查找顶层菜单
     auto topIt = topMenus_.find(topKey.toStdString());
     if (topIt != topMenus_.end()) {
         currentMenu = topIt->second;
         result.append(currentMenu);
     } else {
-        // 鍔ㄦ€佸垱寤烘柊鐨勯《灞傝彍鍗?        currentMenu = menuBar_->addMenu(QString::fromStdString(segments[0]));
+        // 动态创建新的顶层菜单
+        currentMenu = menuBar_->addMenu(QString::fromStdString(segments[0]));
         topMenus_[segments[0]] = currentMenu;
         topMenus_[topKey.toStdString()] = currentMenu;
         result.append(currentMenu);
     }
 
-    // 閫愮骇鏌ユ壘鎴栧垱寤哄瓙鑿滃崟
+    // 逐级查找或创建子菜单
     for (size_t i = 1; i < segments.size(); ++i) {
         QString segment = QString::fromStdString(segments[i]);
         
-        // 鏌ユ壘鐜版湁瀛愯彍鍗?        QMenu* subMenu = nullptr;
+        // 查找现有子菜单
+        QMenu* subMenu = nullptr;
         for (QAction* a : currentMenu->actions()) {
             if (a->menu() && a->text() == segment) {
                 subMenu = a->menu();
@@ -133,7 +144,8 @@ QList<QMenu*> MenuBuilder::resolveMenuPath(const std::string& menuPath) {
             }
         }
 
-        // 濡傛灉涓嶅瓨鍦紝鍒涘缓鏂扮殑瀛愯彍鍗?        if (!subMenu) {
+        // 如果不存在，创建新的子菜单
+        if (!subMenu) {
             subMenu = currentMenu->addMenu(segment);
         }
 
@@ -172,7 +184,7 @@ void MenuBuilder::insertIntoMenu(QMenu* menu, QAction* action, const std::string
         }
     }
 
-    // 鎵句笉鍒板弬鑰冪偣鍒欒拷鍔犲埌鏈熬
+    // 找不到参考点则追加到末尾
     menu->addAction(action);
 }
 

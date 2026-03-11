@@ -1,4 +1,4 @@
-﻿#include "core/MenuDescriptor.h"
+#include "core/MenuDescriptor.h"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -11,7 +11,7 @@ MenuInsertInfo MenuDescriptor::parse(const std::string& menuPath) {
         return info;
     }
 
-    // 鎸?"/" 鍒嗗壊璺緞
+    // 按 "/" 分割路径
     std::vector<std::string> segments;
     std::stringstream ss(menuPath);
     std::string segment;
@@ -23,7 +23,7 @@ MenuInsertInfo MenuDescriptor::parse(const std::string& menuPath) {
 
     if (segments.empty()) return info;
 
-    // 妫€鏌ユ渶鍚庝竴涓鏄惁鍖呭惈 before: 鎴?after: 鍓嶇紑
+    // 检查最后一个段是否包含 before: 或 after: 前缀
     const std::string& last = segments.back();
     if (last.substr(0, 7) == "before:") {
         info.insertPosition = last;
@@ -33,7 +33,7 @@ MenuInsertInfo MenuDescriptor::parse(const std::string& menuPath) {
         segments.pop_back();
     }
 
-    // 杞崲涓烘樉绀哄悕绉板眰绾?
+    // 转换为显示名称层级
     for (const auto& seg : segments) {
         info.menuHierarchy.push_back(toDisplayName(seg));
     }
@@ -42,10 +42,10 @@ MenuInsertInfo MenuDescriptor::parse(const std::string& menuPath) {
 }
 
 std::string MenuDescriptor::toDisplayName(const std::string& pathSegment) {
-    // 绉婚櫎 _menu / _group 鍚庣紑锛岄瀛楁瘝澶у啓
+    // 移除 _menu / _group 后缀，首字母大写
     std::string name = pathSegment;
 
-    // 绉婚櫎宸茬煡鍚庣紑
+    // 移除已知后缀
     for (const char* suffix : {"_menu", "_group", "_bar"}) {
         std::string sfx(suffix);
         if (name.size() > sfx.size() &&
@@ -55,7 +55,7 @@ std::string MenuDescriptor::toDisplayName(const std::string& pathSegment) {
         }
     }
 
-    // 灏嗕笅鍒掔嚎鏇挎崲涓虹┖鏍煎苟棣栧瓧姣嶅ぇ鍐?
+    // 将下划线替换为空格并首字母大写
     if (!name.empty()) {
         name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
     }

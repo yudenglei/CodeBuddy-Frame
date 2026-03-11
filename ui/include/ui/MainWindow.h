@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #ifdef CAE_ENABLE_GUI
 
 #include <QMainWindow>
@@ -12,23 +12,29 @@
 class MenuBuilder;
 class RibbonBar;
 
-/// @brief CAE涓荤獥鍙ｏ紙鍙傝€傾NSYS Electronics Desktop鐣岄潰椋庢牸锛?///
-/// 鐣岄潰甯冨眬锛?///   鑿滃崟鏍?| 蹇嵎宸ュ叿鏍?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-///   Ribbon宸ュ叿鏍忥紙Tab+Group锛?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-///   涓績宸ヤ綔鍖?///   鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-///   鐘舵€佹爮
+/// @brief CAE主窗口（参考ANSYS Electronics Desktop界面风格）
+///
+/// 界面布局：
+///   菜单栏 | 快捷工具栏
+///   ─────────────────────────
+///   Ribbon工具栏（Tab+Group）
+///   ─────────────────────────
+///   中心工作区
+///   ─────────────────────────
+///   状态栏
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
-    /// @brief 鑾峰彇椤跺眰鑿滃崟锛堜緵鎻掍欢鎴栨祴璇曚娇鐢級
+    /// @brief 获取顶层菜单（供插件或测试使用）
     QMenu* getMenu(const std::string& menuName) const;
 
-    /// @brief 鑾峰彇MenuBuilder瀹炰緥锛堜緵UIActionBridge浣跨敤锛?    MenuBuilder* getMenuBuilder() const;
+    /// @brief 获取MenuBuilder实例（供UIActionBridge使用）
+    MenuBuilder* getMenuBuilder() const;
 
-    /// @brief 鑾峰彇RibbonBar瀹炰緥
+    /// @brief 获取RibbonBar实例
     RibbonBar* getRibbonBar() const;
 
 protected:

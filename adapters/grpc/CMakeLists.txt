@@ -23,16 +23,17 @@ add_library(cae_grpc STATIC
     ${GRPC_SRCS}
 )
 
-target_include_directories(cae_grpc PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/core/include
-    ${GENERATED_DIR}
+target_include_directories(cae_grpc
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${GENERATED_DIR}
 )
 
-target_link_libraries(cae_grpc PUBLIC
-    cae_core
-    gRPC::grpc++
-    protobuf::libprotobuf
+target_link_libraries(cae_grpc
+    PUBLIC
+        cae_core
+        gRPC::grpc++
+        protobuf::libprotobuf
 )
 
 target_compile_definitions(cae_grpc PUBLIC CAE_ENABLE_GRPC)

@@ -1,10 +1,10 @@
-﻿#pragma once
+#pragma once
 
-/// @brief 杩愯妯″紡鏋氫妇
-/// 鎺у埗鎻掍欢鍒濆鍖栬涓哄拰鍔熻兘鍙敤鎬?
+/// @brief 运行模式枚举
+/// 控制插件初始化行为和功能可用性
 enum class RunMode {
-    GUI,        ///< Qt5 GUI妯″紡锛堝畬鏁寸晫闈級
-    HEADLESS,   ///< 鏃犵晫闈㈡壒澶勭悊妯″紡
-    PYTHON,     ///< Python鐩磋皟妯″紡锛坧ybind11锛?
-    GRPC        ///< gRPC杩滅▼璋冪敤妯″紡
+    GUI,        ///< Qt5 GUI模式（完整界面）
+    HEADLESS,   ///< 无界面批处理模式
+    PYTHON,     ///< Python直调模式（pybind11）
+    GRPC        ///< gRPC远程调用模式
 };

@@ -1,9 +1,13 @@
-﻿/// @file PluginServiceImpl.cpp
-/// @brief gRPC PluginService 鏈嶅姟绔疄鐜?///
-/// 鎵€鏈?RPC 鏂规硶鏈€缁堝鎵樼粰 ActionManager::invoke()锛?/// 纭繚 gRPC 璋冪敤涓?GUI 鐐瑰嚮銆丳ython invoke() 璧板畬鍏ㄧ浉鍚岀殑鎵ц璺緞銆?
+/// @file PluginServiceImpl.cpp
+/// @brief gRPC PluginService 服务端实现
+///
+/// 所有 RPC 方法最终委托给 ActionManager::invoke()，
+/// 确保 gRPC 调用与 GUI 点击、Python invoke() 走完全相同的执行路径。
+
 #ifdef CAE_ENABLE_GRPC
 
-// 鍖呭惈 protobuf 鐢熸垚鐨勫ご鏂囦欢锛堢敱 cmake/FindgRPC.cmake 鐢熸垚鍒?build/generated/锛?#include "plugin_service.grpc.pb.h"
+// 包含 protobuf 生成的头文件（由 cmake/FindgRPC.cmake 生成到 build/generated/）
+#include "plugin_service.grpc.pb.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
 #include "core/RunMode.h"
@@ -31,7 +35,7 @@ using cae::ActionLogEntry;
 class PluginServiceImpl final : public PluginService::Service {
 public:
     // ----------------------------------------------------------
-    // ExecuteAction锛氭牳蹇?RPC锛屽鎵樼粰 ActionManager::invoke
+    // ExecuteAction：核心 RPC，委托给 ActionManager::invoke
     // ----------------------------------------------------------
     Status ExecuteAction(ServerContext* context,
                          const ExecuteActionRequest* request,
@@ -57,7 +61,7 @@ public:
 
 
     // ----------------------------------------------------------
-    // ListActions锛氳繑鍥炴墍鏈夊凡娉ㄥ唽 Action 淇℃伅
+    // ListActions：返回所有已注册 Action 信息
     // ----------------------------------------------------------
     Status ListActions(ServerContext* context,
                        const ListActionsRequest* request,
@@ -77,34 +81,39 @@ public:
 
 
     // ----------------------------------------------------------
-    // LoadPlugin锛氬姩鎬佸姞杞芥彃浠讹紙濮旀墭缁?PluginManager锛?    // ----------------------------------------------------------
+    // LoadPlugin：动态加载插件（委托给 PluginManager）
+    // ----------------------------------------------------------
     Status LoadPlugin(ServerContext* context,
                       const LoadPluginRequest* request,
                       LoadPluginResponse* response) override {
-        // 瀹為檯瀹炵幇闇€鎸佹湁 PluginManager 寮曠敤
-        // 姝ゅ涓洪鏋跺疄鐜?        response->set_success(false);
+        // 实际实现需持有 PluginManager 引用
+        // 此处为骨架实现
+        response->set_success(false);
         response->set_message("Dynamic load not yet implemented in this skeleton");
         return Status::OK;
     }
 
 
     // ----------------------------------------------------------
-    // ListPlugins锛氬垪鍑哄凡鍔犺浇鎻掍欢
+    // ListPlugins：列出已加载插件
     // ----------------------------------------------------------
     Status ListPlugins(ServerContext* context,
                        const ListPluginsRequest* request,
                        ListPluginsResponse* response) override {
-        // 楠ㄦ灦瀹炵幇锛氬疄闄呴渶鎸佹湁 PluginManager 寮曠敤
+        // 骨架实现：实际需持有 PluginManager 引用
         return Status::OK;
     }
 
 
     // ----------------------------------------------------------
-    // StreamActionLog锛氭祦寮忔帹閫佹墽琛屾棩蹇?    // ----------------------------------------------------------
+    // StreamActionLog：流式推送执行日志
+    // ----------------------------------------------------------
     Status StreamActionLog(ServerContext* context,
                            const StreamActionLogRequest* request,
                            ServerWriter<ActionLogEntry>* writer) override {
-        // 娉ㄥ唽 ActionManager 鐨?Observer 灏嗘棩蹇楁帹閫佺粰瀹㈡埛绔?        // 姝ゅ涓洪鏋跺疄鐜?        ActionLogEntry entry;
+        // 注册 ActionManager 的 Observer 将日志推送给客户端
+        // 此处为骨架实现
+        ActionLogEntry entry;
         auto now = std::chrono::system_clock::now();
         auto t   = std::chrono::system_clock::to_time_t(now);
         std::ostringstream oss;

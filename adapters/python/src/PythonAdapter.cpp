@@ -1,4 +1,4 @@
-﻿#include "adapters/python/PythonAdapter.h"
+#include "adapters/python/PythonAdapter.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
 #include "core/RunMode.h"
@@ -15,7 +15,7 @@ void PythonAdapter::invoke(const std::string& actionId,
     ActionContext ctx;
     ctx.sourceMode = RunMode::PYTHON;
     for (const auto& [k, v] : params) {
-        ctx.params[k] = v; // string 绫诲瀷鍙傛暟
+        ctx.params[k] = v; // string 类型参数
     }
     ActionManager::instance().invoke(actionId, ctx);
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "core/IPlugin.h"
 #include "core/PluginMeta.h"
 #include "core/PluginGlobal.h"
@@ -8,10 +8,11 @@
 class MainWindow;
 #endif
 
-/// @brief 鍩虹UI鎻掍欢锛圲I_ONLY锛?///
-/// 璐熻矗娉ㄥ唽 ANSYS 椋庢牸鐨勮彍鍗曞拰宸ュ叿鏍忥細
-/// - 椤跺眰鑿滃崟锛欶ile/Edit/View/Project/Draw/Modeler/HFSS/Tools/Window/Help
-/// - 宸ュ叿鏍忥細Draw/Modeler/HFSS 绛夐€夐」鍗＄殑鍒嗙粍鎸夐挳
+/// @brief 基础UI插件（UI_ONLY）
+///
+/// 负责注册 ANSYS 风格的菜单和工具栏：
+/// - 顶层菜单：File/Edit/View/Project/Draw/Modeler/HFSS/Tools/Window/Help
+/// - 工具栏：Draw/Modeler/HFSS 等选项卡的分组按钮
 #ifdef CAE_ENABLE_GUI
 class CAE_PLUGIN_EXPORT BaseUIPlugin : public IPlugin, public IUIPlugin {
 #else
@@ -33,7 +34,7 @@ public:
 #endif
 
 private:
-    // 鑿滃崟娉ㄥ唽
+    // 菜单注册
     void registerFileActions();
     void registerEditActions();
     void registerViewActions();
@@ -48,7 +49,7 @@ private:
 };
 
 // ============================================================================
-// 瀵煎嚭鍑芥暟锛圕鎺ュ彛锛屼娇鐢?extern "C" 纭繚绗﹀彿涓€鑷达級
+// 导出函数（C接口，使用 extern "C" 确保符号一致）
 // ============================================================================
 extern "C" {
     CAE_PLUGIN_EXPORT IPlugin* createPlugin();

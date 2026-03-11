@@ -1,7 +1,7 @@
-﻿/// @file PythonModule.cpp
-/// @brief pybind11 妯″潡鍏ュ彛锛氬鍑?Application / ActionManager / ActionDescriptor
+/// @file PythonModule.cpp
+/// @brief pybind11 模块入口：导出 Application / ActionManager / ActionDescriptor
 ///
-/// Python 浣跨敤绀轰緥锛?
+/// Python 使用示例：
 ///   import cae_plugin
 ///   app = cae_plugin.Application.instance()
 ///   am  = app.action_manager()
@@ -26,7 +26,7 @@
 namespace py = pybind11;
 
 // ============================================================
-// Python-friendly ActionManager 鍖呰绫?
+// Python-friendly ActionManager 包装类
 // ============================================================
 class PyActionManager {
 public:
@@ -35,19 +35,19 @@ public:
         return inst;
     }
 
-    /// 瑙﹀彂 Action锛堢瓑浠蜂簬 GUI 鑿滃崟鐐瑰嚮锛?
+    /// 触发 Action（等价于 GUI 菜单点击）
     void invoke(const std::string& id,
                 const std::unordered_map<std::string, std::string>& params = {}) {
-        py::gil_scoped_release release; // 閲婃斁 GIL锛岄伩鍏嶅洖璋冧腑鐨勬閿?
+        py::gil_scoped_release release; // 释放 GIL，避免回调中的死锁
         PythonAdapter::instance().invoke(id, params);
     }
 
-    /// 娉ㄥ唽 Python Action锛坈allback 涓?Python callable锛?
+    /// 注册 Python Action（callback 为 Python callable）
     void registerAction(const std::string& id,
                         const std::string& label,
                         py::object callback,
                         const std::string& menuPath = "") {
-        // 鎸佹湁 Python callable 鐨勭敓鍛藉懆鏈?
+        // 持有 Python callable 的生命周期
         auto cb = [callback]() {
             py::gil_scoped_acquire acquire;
             try {
@@ -59,7 +59,7 @@ public:
         PythonAdapter::instance().registerAction(id, label, std::move(cb), menuPath);
     }
 
-    /// 鑾峰彇鎵€鏈夊凡娉ㄥ唽 Action
+    /// 获取所有已注册 Action
     std::vector<ActionDescriptor> listActions() const {
         return PythonAdapter::instance().listActions();
     }
@@ -70,7 +70,7 @@ public:
 };
 
 // ============================================================
-// Application 鍗曚緥鍖呰锛圞Layout椋庢牸锛歛pp = cae_plugin.Application.instance()锛?
+// Application 单例包装（KLayout风格：app = cae_plugin.Application.instance()）
 // ============================================================
 class PyApplication {
 public:
@@ -87,7 +87,7 @@ public:
 };
 
 // ============================================================
-// PYBIND11_MODULE 瀹氫箟
+// PYBIND11_MODULE 定义
 // ============================================================
 PYBIND11_MODULE(cae_plugin, m) {
     m.doc() = R"doc(
@@ -110,7 +110,7 @@ PYBIND11_MODULE(cae_plugin, m) {
                 print(a.id, a.label, a.shortcut)
     )doc";
 
-    // ---- ActionDescriptor 鍙瑙嗗浘 ----
+    // ---- ActionDescriptor 只读视图 ----
     py::class_<ActionDescriptor>(m, "ActionDescriptor")
         .def_readonly("id",        &ActionDescriptor::id)
         .def_readonly("label",     &ActionDescriptor::label)
@@ -121,7 +121,7 @@ PYBIND11_MODULE(cae_plugin, m) {
             return "<ActionDescriptor id='" + d.id + "' label='" + d.label + "'>";
         });
 
-    // ---- ActionManager Python鍖呰 ----
+    // ---- ActionManager Python包装 ----
     py::class_<PyActionManager>(m, "ActionManager")
         .def_static("instance",    &PyActionManager::instance,
                     py::return_value_policy::reference)
@@ -138,7 +138,7 @@ PYBIND11_MODULE(cae_plugin, m) {
                     py::arg("id"), py::arg("shortcut"),
                     "Update keyboard shortcut for an action");
 
-    // ---- Application 鍗曚緥 ----
+    // ---- Application 单例 ----
     py::class_<PyApplication>(m, "Application")
         .def_static("instance",    &PyApplication::instance,
                     py::return_value_policy::reference)

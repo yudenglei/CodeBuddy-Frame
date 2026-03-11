@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #ifdef CAE_ENABLE_GUI
 
 #include <QWidget>
@@ -18,7 +18,8 @@
 #include "core/ActionManager.h"
 
 // ============================================================================
-// RibbonTabDef - Ribbon閫夐」鍗″畾涔?// ============================================================================
+// RibbonTabDef - Ribbon选项卡定义
+// ============================================================================
 
 struct RibbonTabDef {
     QString id;
@@ -31,7 +32,7 @@ struct RibbonTabDef {
 };
 
 // ============================================================================
-// RibbonGroupDef - Ribbon鍒嗙粍瀹氫箟
+// RibbonGroupDef - Ribbon分组定义
 // ============================================================================
 
 struct RibbonGroupDef {
@@ -46,30 +47,35 @@ struct RibbonGroupDef {
 };
 
 // ============================================================================
-// RibbonBar - ANSYS椋庢牸Ribbon宸ュ叿鏍?// ============================================================================
+// RibbonBar - ANSYS风格Ribbon工具栏
+// ============================================================================
 
-/// @brief Ribbon宸ュ叿鏍忔帶浠讹紙鍙傝€傾NSYS Electronics Desktop椋庢牸锛?/// 
-/// 鍔熻兘锛?/// - 鏀寔澶氫釜Tab椤电
-/// - 姣忎釜Tab涓嬫湁澶氫釜Group鍒嗙粍
-/// - 姣忎釜Group鍐呮湁宸ュ叿鏍忔寜閽?/// - 鏀寔澶у浘鏍?鏂囧瓧銆佸皬鍥炬爣+鏂囧瓧銆佷粎鍥炬爣涓夌妯″紡
+/// @brief Ribbon工具栏控件（参考ANSYS Electronics Desktop风格）
+/// 
+/// 功能：
+/// - 支持多个Tab页签
+/// - 每个Tab下有多个Group分组
+/// - 每个Group内有工具栏按钮
+/// - 支持大图标+文字、小图标+文字、仅图标三种模式
 class RibbonBar : public QWidget {
     Q_OBJECT
 public:
     explicit RibbonBar(QWidget* parent = nullptr);
     ~RibbonBar() override;
     
-    /// @brief 娉ㄥ唽涓€涓猂ibbon Tab
+    /// @brief 注册一个Ribbon Tab
     void registerTab(const RibbonTabDef& tab);
     
-    /// @brief 娉ㄥ唽涓€涓猂ibbon Group
+    /// @brief 注册一个Ribbon Group
     void registerGroup(const RibbonGroupDef& group);
     
-    /// @brief 娉ㄥ唽Action鍒板伐鍏锋爮锛堟牴鎹甊ibbonInfo鑷姩鏀剧疆锛?    void registerAction(const ActionDescriptor& desc);
+    /// @brief 注册Action到工具栏（根据RibbonInfo自动放置）
+    void registerAction(const ActionDescriptor& desc);
     
-    /// @brief 鍒锋柊鏁翠釜Ribbon甯冨眬
+    /// @brief 刷新整个Ribbon布局
     void refresh();
     
-    /// @brief 鑾峰彇褰撳墠娲诲姩Tab
+    /// @brief 获取当前活动Tab
     QString currentTabId() const;
     
 signals:
@@ -91,11 +97,12 @@ private:
     QMap<QString, QMap<QString, QWidget*>> groups_; // tabId -> (groupId -> group widget)
     QMap<QString, QToolBar*> groupToolbars_; // groupId -> toolbar
     
-    // Action鍒癚Action鐨勬槧灏?    QMap<QString, QAction*> actionMap_;
+    // Action到QAction的映射
+    QMap<QString, QAction*> actionMap_;
 };
 
 // ============================================================================
-// RibbonBuilder - 鐢ㄤ簬浠嶢ctionManager鏋勫缓Ribbon
+// RibbonBuilder - 用于从ActionManager构建Ribbon
 // ============================================================================
 
 class RibbonBuilder : public QObject {
@@ -104,7 +111,7 @@ public:
     explicit RibbonBuilder(RibbonBar* ribbonBar, QObject* parent = nullptr);
     ~RibbonBuilder() override;
     
-    /// @brief 浠嶢ctionManager鏋勫缓鏁翠釜Ribbon
+    /// @brief 从ActionManager构建整个Ribbon
     void buildFromActionManager();
     
 private:

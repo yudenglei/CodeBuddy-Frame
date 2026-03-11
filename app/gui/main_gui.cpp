@@ -1,5 +1,6 @@
-﻿/// @file main_gui.cpp
-/// @brief GUI妯″紡鍏ュ彛锛圦Application + MainWindow + PluginManager锛?
+/// @file main_gui.cpp
+/// @brief GUI模式入口（QApplication + MainWindow + PluginManager）
+
 #ifdef CAE_ENABLE_GUI
 
 #include <QApplication>
@@ -15,15 +16,15 @@
 #include "core/PluginMeta.h"
 
 
-// PluginManager 宸ュ巶鍑芥暟锛堝湪 PluginManager.cpp 涓畾涔夛級
+// PluginManager 工厂函数（在 PluginManager.cpp 中定义）
 std::unique_ptr<IPluginManager> createPluginManager();
 
-/// @brief 杈呭姪鍑芥暟锛氬皾璇曞皢IPlugin杞崲涓篒UIPlugin骞惰皟鐢╯etupUI
+/// @brief 辅助函数：尝试将IPlugin转换为IUIPlugin并调用setupUI
 void setupUIPlugin(IPlugin* plugin, MainWindow* mainWindow) {
     if (!plugin || !mainWindow) return;
     
-    // 浣跨敤dynamic_cast灏濊瘯杞崲涓篒UIPlugin
-    // 杩欒姹傛彃浠跺悓鏃剁户鎵縄Plugin鍜孖UIPlugin
+    // 使用dynamic_cast尝试转换为IUIPlugin
+    // 这要求插件同时继承IPlugin和IUIPlugin
     IUIPlugin* uiPlugin = dynamic_cast<IUIPlugin*>(plugin);
     if (uiPlugin) {
         std::cout << "[GUI] Calling setupUI for UI plugin\n";
@@ -37,7 +38,8 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("CAE Corp");
 
-    // 璁剧疆娣辫壊涓婚锛團usion椋庢牸锛?    app.setStyle(QStyleFactory::create("Fusion"));
+    // 设置深色主题（Fusion风格）
+    app.setStyle(QStyleFactory::create("Fusion"));
     QPalette darkPalette;
     darkPalette.setColor(QPalette::Window,          QColor(30, 30, 46));
     darkPalette.setColor(QPalette::WindowText,       QColor(205, 214, 244));
@@ -52,22 +54,26 @@ int main(int argc, char* argv[]) {
     darkPalette.setColor(QPalette::HighlightedText,  QColor(30, 30, 46));
     app.setPalette(darkPalette);
 
-    // 鍒涘缓涓荤獥鍙ｏ紙鍐呴儴鍒涘缓 MenuBuilder锛屾敞鍐?ActionManager Observer锛?    MainWindow mainWindow;
+    // 创建主窗口（内部创建 MenuBuilder，注册 ActionManager Observer）
+    MainWindow mainWindow;
 
     // =========================================================================
-    // 鎻掍欢鍔犺浇娴佺▼
+    // 插件加载流程
     // =========================================================================
     
-    // 1. 鍒涘缓鎻掍欢绠＄悊鍣?    auto pluginMgr = createPluginManager();
+    // 1. 创建插件管理器
+    auto pluginMgr = createPluginManager();
     
-    // 2. 璁剧疆鎻掍欢鐩綍 - 鐩稿浜庡彲鎵ц鏂囦欢
-    // 寮€鍙戞ā寮? [build]/bin/plugins/
-    // 瀹夎妯″紡: [瀹夎鐩綍]/bin/plugins/
+    // 2. 设置插件目录 - 相对于可执行文件
+    // 开发模式: [build]/bin/plugins/
+    // 安装模式: [安装目录]/bin/plugins/
     QString pluginsDir = QCoreApplication::applicationDirPath() + "/plugins";
     
-    // 濡傛灉寮€鍙戞ā寮忕洰褰曚笉瀛樺湪锛屽皾璇曞鐢ㄨ矾寰?    QDir dir(pluginsDir);
+    // 如果开发模式目录不存在，尝试备用路径
+    QDir dir(pluginsDir);
     if (!dir.exists()) {
-        // 灏濊瘯鐩稿浜庡伐浣滅洰褰?        pluginsDir = QCoreApplication::applicationDirPath() + "/../plugins";
+        // 尝试相对于工作目录
+        pluginsDir = QCoreApplication::applicationDirPath() + "/../plugins";
         dir.setPath(pluginsDir);
         if (!dir.exists()) {
             pluginsDir = QCoreApplication::applicationDirPath() + "/../../plugins";
@@ -76,15 +82,16 @@ int main(int argc, char* argv[]) {
     
     std::cout << "[GUI] Plugin directory: " << pluginsDir.toStdString() << "\n";
     
-    // 3. 鍙戠幇鎻掍欢
+    // 3. 发现插件
     if (!pluginMgr->discover(pluginsDir.toStdString())) {
         std::cout << "[GUI] No plugins found or loaded\n";
     }
     
-    // 4. 鍒濆鍖栨彃浠讹紙浼犲叆GUI妯″紡锛?    pluginMgr->initializeAll(RunMode::GUI);
+    // 4. 初始化插件（传入GUI模式）
+    pluginMgr->initializeAll(RunMode::GUI);
     
     // =========================================================================
-    // 鍏抽敭姝ラ锛氫负姣忎釜UI/HYBRID鎻掍欢璋冪敤setupUI
+    // 关键步骤：为每个UI/HYBRID插件调用setupUI
     // =========================================================================
     for (auto* plugin : pluginMgr->getAllPlugins()) {
         if (!plugin) continue;

@@ -1,6 +1,7 @@
-﻿cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16)
 
-# UI搴擄細浠呭湪 ENABLE_GUI=ON 鏃剁紪璇?if(NOT ENABLE_GUI)
+# UI库：仅在 ENABLE_GUI=ON 时编译
+if(NOT ENABLE_GUI)
     return()
 endif()
 
@@ -30,7 +31,8 @@ target_link_libraries(cae_ui
         Qt5::Widgets
 )
 
-# GUI妯″紡瀹忓畾涔?target_compile_definitions(cae_ui PUBLIC CAE_ENABLE_GUI)
+# GUI模式宏定义
+target_compile_definitions(cae_ui PUBLIC CAE_ENABLE_GUI)
 
 target_compile_features(cae_ui PUBLIC cxx_std_17)
 

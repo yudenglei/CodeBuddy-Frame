@@ -1,10 +1,10 @@
-﻿# cmake/FindgRPC.cmake
-# gRPC + protobuf 鏌ユ壘鍜?proto 浠ｇ爜鐢熸垚灏佽
+# cmake/FindgRPC.cmake
+# gRPC + protobuf 查找和 proto 代码生成封装
 
 find_package(Protobuf QUIET)
 find_package(gRPC QUIET)
 
-# 濡傛灉鎵句笉鍒帮紝灏濊瘯閫氳繃 pkg-config
+# 如果找不到，尝试通过 pkg-config
 if(NOT gRPC_FOUND)
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
@@ -13,7 +13,7 @@ if(NOT gRPC_FOUND)
     endif()
 endif()
 
-# 鏌ユ壘 grpc_cpp_plugin 浠ｇ爜鐢熸垚宸ュ叿
+# 查找 grpc_cpp_plugin 代码生成工具
 find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin
     HINTS
         /usr/local/bin
@@ -29,8 +29,8 @@ endif()
 
 # ------------------------------------------------------------
 # generate_grpc_cpp(<proto_file> <output_dir>
-#   SRCS <var>   - 杈撳嚭锛氱敓鎴愮殑.cc鏂囦欢鍒楄〃
-#   HDRS <var>   - 杈撳嚭锛氱敓鎴愮殑.h鏂囦欢鍒楄〃
+#   SRCS <var>   - 输出：生成的.cc文件列表
+#   HDRS <var>   - 输出：生成的.h文件列表
 # )
 # ------------------------------------------------------------
 function(generate_grpc_cpp PROTO_FILE OUTPUT_DIR)
@@ -58,7 +58,7 @@ function(generate_grpc_cpp PROTO_FILE OUTPUT_DIR)
         )
     else()
         message(WARNING "[FindgRPC] Skipping code generation (protoc or grpc_cpp_plugin not found)")
-        # 鍒涘缓绌烘枃浠朵互閬垮厤鏋勫缓澶辫触
+        # 创建空文件以避免构建失败
         foreach(_f ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS})
             if(NOT EXISTS ${_f})
                 file(WRITE ${_f} "// Auto-generated placeholder\n")
@@ -66,7 +66,7 @@ function(generate_grpc_cpp PROTO_FILE OUTPUT_DIR)
         endforeach()
     endif()
 
-    # 鍚戠埗浣滅敤鍩熻繑鍥炵粨鏋?
+    # 向父作用域返回结果
     if(DEFINED GEN_SRCS)
         set(${GEN_SRCS} "${PROTO_SRCS};${GRPC_SRCS}" PARENT_SCOPE)
     endif()

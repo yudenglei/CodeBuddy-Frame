@@ -1,27 +1,27 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <memory>
 
-/// @brief gRPC鏈嶅姟鍣ㄩ€傞厤鍣?
+/// @brief gRPC服务器适配器
 ///
-/// 灏佽 grpc::Server 鐨勭敓鍛藉懆鏈燂細鏋勫缓 鈫?鍚姩 鈫?浼橀泤鍏抽棴
+/// 封装 grpc::Server 的生命周期：构建 → 启动 → 优雅关闭
 class GrpcAdapter {
 public:
     GrpcAdapter() = default;
     ~GrpcAdapter();
 
-    /// @brief 鍚姩 gRPC 鏈嶅姟鍣紙闃诲锛?
-    /// @param address 鐩戝惉鍦板潃锛屽 "0.0.0.0:50051"
-    /// @return 鏄惁鎴愬姛鍚姩
+    /// @brief 启动 gRPC 服务器（阻塞）
+    /// @param address 监听地址，如 "0.0.0.0:50051"
+    /// @return 是否成功启动
     bool start(const std::string& address);
 
-    /// @brief 寮傛鍚姩锛堝湪鍚庡彴绾跨▼杩愯锛?
+    /// @brief 异步启动（在后台线程运行）
     bool startAsync(const std::string& address);
 
-    /// @brief 浼橀泤鍏抽棴鏈嶅姟鍣?
+    /// @brief 优雅关闭服务器
     void shutdown();
 
-    /// @brief 鑾峰彇瀹為檯鐩戝惉绔彛
+    /// @brief 获取实际监听端口
     int getListeningPort() const;
 
 private:

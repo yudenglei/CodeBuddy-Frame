@@ -1,6 +1,6 @@
-﻿cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16)
 
-# core 闈欐€佸簱锛氶浂澶栭儴渚濊禆锛屾墍鏈夋ā寮忓叡浜?
+# core 静态库：零外部依赖，所有模式共享
 add_library(cae_core STATIC
     src/ActionManager.cpp
     src/MenuDescriptor.cpp
@@ -15,25 +15,25 @@ target_include_directories(cae_core
         $<INSTALL_INTERFACE:include>
 )
 
-# C++17鏍囧噯锛屽紩鍏ョ紪璇戦€夐」
+# C++17标准，引入编译选项
 target_compile_features(cae_core PUBLIC cxx_std_17)
 
-# Windows闇€瑕侀摼鎺ュ姩鎬佸姞杞藉簱锛坉lopen绛夋晥API宸插唴缃級
+# Windows需要链接动态加载库（dlopen等效API已内置）
 if(WIN32)
-    # LoadLibrary绛堿PI鍦↘ernel32涓紝MSVC榛樿閾炬帴锛孧inGW闇€鏄惧紡鎸囧畾
+    # LoadLibrary等API在Kernel32中，MSVC默认链接，MinGW需显式指定
     if(MINGW)
         target_link_libraries(cae_core PUBLIC -lkernel32)
     endif()
 else()
-    # Linux闇€瑕侀摼鎺l鍜宖ilesystem搴?
+    # Linux需要链接dl和filesystem库
     target_link_libraries(cae_core PUBLIC dl)
-    # GCC < 9 闇€瑕佹樉寮忛摼鎺tdc++fs
+    # GCC < 9 需要显式链接stdc++fs
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
         target_link_libraries(cae_core PUBLIC stdc++fs)
     endif()
 endif()
 
-# 瀹夎瑙勫垯
+# 安装规则
 install(TARGETS cae_core
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

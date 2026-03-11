@@ -1,4 +1,4 @@
-﻿#ifdef CAE_ENABLE_GUI
+#ifdef CAE_ENABLE_GUI
 #include "ui/RibbonBar.h"
 #include "core/ActionManager.h"
 #include <QDebug>
@@ -16,18 +16,19 @@ RibbonBar::RibbonBar(QWidget* parent)
 RibbonBar::~RibbonBar() = default;
 
 void RibbonBar::setupUi() {
-    // 璁剧疆涓诲竷灞€
+    // 设置主布局
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     mainLayout->addWidget(tabWidget_);
     
-    // 璁剧疆Tab鏍峰紡 - ANSYS椋庢牸
+    // 设置Tab样式 - ANSYS风格
     tabWidget_->setDocumentMode(true);
     tabWidget_->setTabsClosable(false);
     tabWidget_->setMovable(false);
     
-    // 璁剧疆鏍峰紡琛?    QString style = R"(
+    // 设置样式表
+    QString style = R"(
         QTabWidget::pane {
             border: 1px solid #D9D9D9;
             background: white;
@@ -55,25 +56,27 @@ void RibbonBar::setupUi() {
 }
 
 void RibbonBar::createDefaultTabs() {
-    // 娉ㄥ唽榛樿鐨凙NSYS椋庢牸Tabs
-    registerTab(RibbonTabDef("File", "鏂囦欢", 0));
-    registerTab(RibbonTabDef("Draw", "缁樺埗", 10));
-    registerTab(RibbonTabDef("Modeler", "寤烘ā", 20));
-    registerTab(RibbonTabDef("HFSS", "浠跨湡", 30));
-    registerTab(RibbonTabDef("Tools", "宸ュ叿", 100));
+    // 注册默认的ANSYS风格Tabs
+    registerTab(RibbonTabDef("File", "文件", 0));
+    registerTab(RibbonTabDef("Draw", "绘制", 10));
+    registerTab(RibbonTabDef("Modeler", "建模", 20));
+    registerTab(RibbonTabDef("HFSS", "仿真", 30));
+    registerTab(RibbonTabDef("Tools", "工具", 100));
 }
 
 void RibbonBar::registerTab(const RibbonTabDef& tab) {
     if (tabWidgets_.contains(tab.id)) {
-        return; // 宸插瓨鍦?    }
+        return; // 已存在
+    }
     
-    // 鍒涘缓Tab鍐呭瀹瑰櫒
+    // 创建Tab内容容器
     QWidget* container = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(container);
     layout->setContentsMargins(4, 4, 4, 4);
     layout->setSpacing(8);
     
-    // 娣诲姞宸ュ叿鏍忓尯鍩?    QScrollArea* scrollArea = new QScrollArea(container);
+    // 添加工具栏区域
+    QScrollArea* scrollArea = new QScrollArea(container);
     scrollArea->setWidgetResizable(true);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -102,16 +105,17 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
     
     QString groupKey = group.tabId + "/" + group.id;
     if (groups_.contains(group.tabId) && groups_[group.tabId].contains(group.id)) {
-        return; // 宸插瓨鍦?    }
+        return; // 已存在
+    }
     
-    // 鑾峰彇Tab鐨勫竷灞€
+    // 获取Tab的布局
     QWidget* container = tabWidgets_[group.tabId];
     QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(container->layout());
     QScrollArea* scrollArea = qobject_cast<QScrollArea*>(mainLayout->itemAt(0)->widget());
     QWidget* toolbarsContainer = scrollArea->widget();
     QHBoxLayout* toolbarsLayout = qobject_cast<QHBoxLayout*>(toolbarsContainer->layout());
     
-    // 鍒涘缓Group瀹瑰櫒
+    // 创建Group容器
     QWidget* groupWidget = new QWidget(toolbarsContainer);
     groupWidget->setStyleSheet(R"(
         QWidget {
@@ -125,7 +129,7 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
     groupLayout->setContentsMargins(8, 6, 8, 6);
     groupLayout->setSpacing(4);
     
-    // Group鏍囬
+    // Group标题
     QLabel* titleLabel = new QLabel(group.title, groupWidget);
     titleLabel->setStyleSheet(R"(
         QLabel {
@@ -136,7 +140,8 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
     )");
     groupLayout->addWidget(titleLabel);
     
-    // 娣诲姞宸ュ叿鏍?    QToolBar* toolbar = new QToolBar(groupWidget);
+    // 添加工具栏
+    QToolBar* toolbar = new QToolBar(groupWidget);
     toolbar->setMovable(false);
     toolbar->setFloatable(false);
     toolbar->setStyleSheet(R"(
@@ -148,10 +153,11 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
     )");
     groupLayout->addWidget(toolbar);
     
-    // 鎻掑叆鍒癎roup瀹瑰櫒涔嬪墠锛堟坊鍔犲垎闅旂鍜孏roup锛?    int insertPos = toolbarsLayout->count() - 1; // 鍦╯tretch涔嬪墠
+    // 插入到Group容器之前（添加分隔符和Group）
+    int insertPos = toolbarsLayout->count() - 1; // 在stretch之前
     toolbarsLayout->insertWidget(insertPos, groupWidget);
     
-    // 淇濆瓨寮曠敤
+    // 保存引用
     if (!groups_.contains(group.tabId)) {
         groups_[group.tabId] = QMap<QString, QWidget*>();
     }
@@ -162,31 +168,31 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
 }
 
 void RibbonBar::registerAction(const ActionDescriptor& desc) {
-    // 妫€鏌ユ槸鍚︽湁Ribbon閰嶇疆
+    // 检查是否有Ribbon配置
     if (desc.ribbon.tabId.isEmpty()) {
-        return; // 娌℃湁Ribbon閰嶇疆
+        return; // 没有Ribbon配置
     }
     
-    // 纭繚Tab瀛樺湪
+    // 确保Tab存在
     if (!tabWidgets_.contains(desc.ribbon.tabId)) {
         registerTab(RibbonTabDef(desc.ribbon.tabId, desc.ribbon.tabTitle, desc.ribbon.tabOrder));
     }
     
-    // 纭繚Group瀛樺湪
+    // 确保Group存在
     QString groupKey = desc.ribbon.tabId + "/" + desc.ribbon.groupId;
     if (!groupToolbars_.contains(groupKey)) {
         registerGroup(RibbonGroupDef(desc.ribbon.groupId, desc.ribbon.tabId, 
                                      desc.ribbon.groupTitle, desc.ribbon.groupOrder));
     }
     
-    // 鍒涘缓QAction
+    // 创建QAction
     QAction* action = new QAction(this);
     action->setText(desc.label);
     action->setToolTip(desc.tooltip.isEmpty() ? desc.label : desc.tooltip);
     action->setStatusTip(desc.tooltip);
     
     if (!desc.iconPath.isEmpty()) {
-        // 灏濊瘯鍔犺浇鍥炬爣
+        // 尝试加载图标
         QIcon icon(desc.iconPath.c_str());
         if (!icon.isNull()) {
             action->setIcon(icon);
@@ -197,16 +203,16 @@ void RibbonBar::registerAction(const ActionDescriptor& desc) {
         action->setShortcut(QKeySequence(desc.shortcut.c_str()));
     }
     
-    // 璁剧疆鎸夐挳鏍峰紡
+    // 设置按钮样式
     QToolBar* toolbar = groupToolbars_[groupKey];
     if (toolbar) {
         toolbar->addAction(action);
     }
     
-    // 淇濆瓨鏄犲皠
+    // 保存映射
     actionMap_[desc.id.c_str()] = action;
     
-    // 杩炴帴淇″彿
+    // 连接信号
     connect(action, &QAction::triggered, this, [this, desc]() {
         emit actionTriggered(desc.id.c_str());
     });
@@ -215,7 +221,7 @@ void RibbonBar::registerAction(const ActionDescriptor& desc) {
 }
 
 void RibbonBar::refresh() {
-    // 閲嶆柊甯冨眬锛堝鏋滈渶瑕侊級
+    // 重新布局（如果需要）
     tabWidget_->update();
 }
 
@@ -258,33 +264,33 @@ RibbonBuilder::RibbonBuilder(RibbonBar* ribbonBar, QObject* parent)
     , ribbonBar_(ribbonBar)
 {
     if (ribbonBar_) {
-        // 娉ㄥ唽榛樿Tabs
-        ribbonBar_->registerTab(RibbonTabDef("File", "鏂囦欢", 0));
-        ribbonBar_->registerTab(RibbonTabDef("Draw", "缁樺埗", 10));
-        ribbonBar_->registerTab(RibbonTabDef("Modeler", "寤烘ā", 20));
-        ribbonBar_->registerTab(RibbonTabDef("HFSS", "浠跨湡", 30));
-        ribbonBar_->registerTab(RibbonTabDef("Tools", "宸ュ叿", 100));
+        // 注册默认Tabs
+        ribbonBar_->registerTab(RibbonTabDef("File", "文件", 0));
+        ribbonBar_->registerTab(RibbonTabDef("Draw", "绘制", 10));
+        ribbonBar_->registerTab(RibbonTabDef("Modeler", "建模", 20));
+        ribbonBar_->registerTab(RibbonTabDef("HFSS", "仿真", 30));
+        ribbonBar_->registerTab(RibbonTabDef("Tools", "工具", 100));
         
-        // 娉ㄥ唽榛樿Groups
+        // 注册默认Groups
         // File Tab
-        ribbonBar_->registerGroup(RibbonGroupDef("File", "File", "鏂囦欢", 0));
+        ribbonBar_->registerGroup(RibbonGroupDef("File", "File", "文件", 0));
         
         // Draw Tab
-        ribbonBar_->registerGroup(RibbonGroupDef("Select", "Draw", "閫夋嫨", 0));
-        ribbonBar_->registerGroup(RibbonGroupDef("Primitives", "Draw", "鍩烘湰浣?, 10));
-        ribbonBar_->registerGroup(RibbonGroupDef("2D", "Draw", "2D鍥惧舰", 20));
-        ribbonBar_->registerGroup(RibbonGroupDef("Transform", "Draw", "鍙樻崲", 30));
+        ribbonBar_->registerGroup(RibbonGroupDef("Select", "Draw", "选择", 0));
+        ribbonBar_->registerGroup(RibbonGroupDef("Primitives", "Draw", "基本体", 10));
+        ribbonBar_->registerGroup(RibbonGroupDef("2D", "Draw", "2D图形", 20));
+        ribbonBar_->registerGroup(RibbonGroupDef("Transform", "Draw", "变换", 30));
         
         // Modeler Tab
-        ribbonBar_->registerGroup(RibbonGroupDef("Boolean", "Modeler", "甯冨皵杩愮畻", 0));
-        ribbonBar_->registerGroup(RibbonGroupDef("Edge", "Modeler", "杈圭紭", 10));
-        ribbonBar_->registerGroup(RibbonGroupDef("Measure", "Modeler", "娴嬮噺", 20));
+        ribbonBar_->registerGroup(RibbonGroupDef("Boolean", "Modeler", "布尔运算", 0));
+        ribbonBar_->registerGroup(RibbonGroupDef("Edge", "Modeler", "边缘", 10));
+        ribbonBar_->registerGroup(RibbonGroupDef("Measure", "Modeler", "测量", 20));
         
         // HFSS Tab
-        ribbonBar_->registerGroup(RibbonGroupDef("Simulation", "HFSS", "浠跨湡", 0));
-        ribbonBar_->registerGroup(RibbonGroupDef("Analysis", "HFSS", "鍒嗘瀽", 10));
+        ribbonBar_->registerGroup(RibbonGroupDef("Simulation", "HFSS", "仿真", 0));
+        ribbonBar_->registerGroup(RibbonGroupDef("Analysis", "HFSS", "分析", 10));
         
-        // 娉ㄥ唽鍒癆ctionManager鐨凮bserver
+        // 注册到ActionManager的Observer
         ActionManager::instance().onActionRegistered(
             [this](const ActionDescriptor& desc) {
                 onActionRegistered(desc);
@@ -298,7 +304,7 @@ RibbonBuilder::~RibbonBuilder() = default;
 void RibbonBuilder::buildFromActionManager() {
     if (!ribbonBar_) return;
     
-    // 浠嶢ctionManager鑾峰彇鎵€鏈夊凡娉ㄥ唽鐨凙ction
+    // 从ActionManager获取所有已注册的Action
     auto actions = ActionManager::instance().listActions();
     for (const auto& desc : actions) {
         onActionRegistered(desc);
@@ -308,7 +314,7 @@ void RibbonBuilder::buildFromActionManager() {
 void RibbonBuilder::onActionRegistered(const ActionDescriptor& desc) {
     if (!ribbonBar_) return;
     
-    // 妫€鏌ユ槸鍚︽湁Ribbon閰嶇疆
+    // 检查是否有Ribbon配置
     if (!desc.ribbon.tabId.isEmpty()) {
         ribbonBar_->registerAction(desc);
     }

@@ -1,19 +1,19 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <vector>
 
-/// @brief 鎻掍欢绫诲瀷鏋氫妇
+/// @brief 插件类型枚举
 enum class PluginType {
-    UI_ONLY,  ///< 绾疷I鎻掍欢锛屼粎GUI妯″紡鍔犺浇
-    DB_ONLY,  ///< 绾暟鎹簱/閫昏緫鎻掍欢锛屾墍鏈夋ā寮忓彲鐢?
-    HYBRID    ///< 娣峰悎鍨嬶細閫昏緫灞傚叏妯″紡鍙敤锛孶I灞備粎GUI妯″紡
+    UI_ONLY,  ///< 纯UI插件，仅GUI模式加载
+    DB_ONLY,  ///< 纯数据库/逻辑插件，所有模式可用
+    HYBRID    ///< 混合型：逻辑层全模式可用，UI层仅GUI模式
 };
 
-/// @brief 鎻掍欢鍏冧俊鎭粨鏋勪綋
+/// @brief 插件元信息结构体
 struct PluginMeta {
-    std::string name;                          ///< 鎻掍欢鍞竴鍚嶇О锛堝 "pcb_analysis"锛?
-    std::string version;                       ///< 鐗堟湰鍙凤紙濡?"1.0.0"锛?
-    std::string description;                   ///< 鎻掍欢鎻忚堪
-    PluginType  type{PluginType::DB_ONLY};     ///< 鎻掍欢绫诲瀷
-    std::vector<std::string> dependencies;     ///< 渚濊禆鐨勬彃浠跺悕绉板垪琛紙Kahn鎺掑簭鐢級
+    std::string name;                          ///< 插件唯一名称（如 "pcb_analysis"）
+    std::string version;                       ///< 版本号（如 "1.0.0"）
+    std::string description;                   ///< 插件描述
+    PluginType  type{PluginType::DB_ONLY};     ///< 插件类型
+    std::vector<std::string> dependencies;     ///< 依赖的插件名称列表（Kahn排序用）
 };

@@ -1,4 +1,4 @@
-﻿#include <string>
+#include <string>
 #include <vector>
 #include <iostream>
 
@@ -13,7 +13,7 @@
    namespace fs = std::filesystem;
 #endif
 
-/// @brief 璺ㄥ钩鍙板姩鎬佸簱鍙ユ焺锛堝唴閮ㄧ被鍨嬶級
+/// @brief 跨平台动态库句柄（内部类型）
 struct LibHandle {
 #ifdef _WIN32
     HMODULE handle{nullptr};
@@ -25,7 +25,7 @@ struct LibHandle {
 LibHandle* dynamicLoad(const std::string& path) {
     auto* lh = new LibHandle();
 #ifdef _WIN32
-    // 杞崲涓哄瀛楃浠ユ敮鎸佽矾寰勪腑鐨刄nicode
+    // 转换为宽字符以支持路径中的Unicode
     int wlen = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, nullptr, 0);
     std::wstring wpath(wlen, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wpath[0], wlen);
@@ -66,7 +66,7 @@ void dynamicUnload(LibHandle* handle) {
     delete handle;
 }
 
-/// @brief 鎵弿鐩綍锛岃繑鍥炴墍鏈夋寚瀹氭墿灞曞悕鐨勬枃浠惰矾寰?
+/// @brief 扫描目录，返回所有指定扩展名的文件路径
 std::vector<std::string> scanDirectory(const std::string& dir, const std::string& ext) {
     std::vector<std::string> result;
     std::error_code ec;

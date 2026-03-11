@@ -1,4 +1,4 @@
-﻿#ifdef CAE_ENABLE_GUI
+#ifdef CAE_ENABLE_GUI
 #include "ui/UIActionBridge.h"
 #include "core/ActionManager.h"
 #include <QAction>
@@ -10,7 +10,7 @@ UIActionBridge::UIActionBridge(QObject* parent)
 {}
 
 QAction* UIActionBridge::createQAction(const ActionDescriptor& desc, QObject* parent) {
-    // 鑻ュ凡瀛樺湪鍒欒繑鍥炲苟鏇存柊灞炴€?
+    // 若已存在则返回并更新属性
     auto it = qactionMap_.find(desc.id);
     if (it != qactionMap_.end()) {
         QAction* existing = it->second;
@@ -36,10 +36,10 @@ QAction* UIActionBridge::createQAction(const ActionDescriptor& desc, QObject* pa
         action->setIcon(QIcon(QString::fromStdString(desc.iconPath)));
     }
 
-    // 灏?action id 瀛樺叆 QAction 鐨?property锛屾柟渚?triggered 鏃惰幏鍙?
+    // 将 action id 存入 QAction 的 property，方便 triggered 时获取
     action->setProperty("cae_action_id", QString::fromStdString(desc.id));
 
-    // 杩炴帴 triggered 淇″彿鍒扮粺涓€澶勭悊妲?
+    // 连接 triggered 信号到统一处理槽
     connect(action, &QAction::triggered, this, &UIActionBridge::onQActionTriggered);
 
     qactionMap_[desc.id] = action;
@@ -62,9 +62,9 @@ void UIActionBridge::refreshActionState(const std::string& id) {
     auto* qaction = findQAction(id);
     if (!qaction) return;
 
-    // 浠?ActionManager 鑾峰彇鏈€鏂扮姸鎬侊紙濡傛灉鏈夊搴?IAction 瀹炵幇锛?
-    // 鏈鏋朵腑 ActionDescriptor 浣跨敤 callback 妯″紡锛宔nabled/checked 鐢辨彃浠舵帶鍒?
-    // 姝ゅ棰勭暀鎵╁睍鐐?
+    // 从 ActionManager 获取最新状态（如果有对应 IAction 实现）
+    // 本框架中 ActionDescriptor 使用 callback 模式，enabled/checked 由插件控制
+    // 此处预留扩展点
 }
 
 void UIActionBridge::onQActionTriggered() {
@@ -74,7 +74,7 @@ void UIActionBridge::onQActionTriggered() {
     QString id = action->property("cae_action_id").toString();
     if (id.isEmpty()) return;
 
-    // 鏋勫缓璋冪敤涓婁笅鏂囷紙鏉ユ簮涓篏UI妯″紡锛?
+    // 构建调用上下文（来源为GUI模式）
     ActionContext ctx;
     ctx.sourceMode = RunMode::GUI;
 

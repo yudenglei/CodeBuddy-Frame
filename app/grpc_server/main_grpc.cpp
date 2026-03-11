@@ -1,7 +1,7 @@
-﻿/// @file main_grpc.cpp
-/// @brief gRPC 鏈嶅姟鍣ㄦā寮忓叆鍙?
+/// @file main_grpc.cpp
+/// @brief gRPC 服务器模式入口
 ///
-/// 鐢ㄦ硶锛?
+/// 用法：
 ///   cae_grpc_server --port=50051 --plugins=./plugins
 
 #ifdef CAE_ENABLE_GRPC
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[gRPC Server] Starting CAE gRPC server\n";
 
-    // 鍔犺浇鎻掍欢锛坓RPC妯″紡锛?
+    // 加载插件（gRPC模式）
     auto pluginMgr = createPluginManager();
     pluginMgr->discover(pluginsDir);
     pluginMgr->initializeAll(RunMode::GRPC);
@@ -55,13 +55,13 @@ int main(int argc, char* argv[]) {
     std::cout << "[gRPC Server] Listening on " << address << "\n";
     std::cout << "[gRPC Server] Press Ctrl+C to stop\n";
 
-    // 娉ㄥ唽淇″彿澶勭悊
+    // 注册信号处理
     GrpcAdapter adapter;
     gGrpcAdapter = &adapter;
     std::signal(SIGINT,  signalHandler);
     std::signal(SIGTERM, signalHandler);
 
-    adapter.start(address); // 闃诲鐩村埌 shutdown()
+    adapter.start(address); // 阻塞直到 shutdown()
 
     pluginMgr->shutdownAll();
     std::cout << "[gRPC Server] Stopped\n";

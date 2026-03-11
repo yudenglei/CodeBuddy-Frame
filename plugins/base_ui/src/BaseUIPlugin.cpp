@@ -1,4 +1,4 @@
-﻿#include "BaseUIPlugin.h"
+#include "BaseUIPlugin.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
 #include <iostream>
@@ -9,7 +9,7 @@
 #endif
 
 // ============================================================================
-// 瀵煎嚭鍑芥暟瀹炵幇
+// 导出函数实现
 // ============================================================================
 extern "C" {
     IPlugin* createPlugin()  { return new BaseUIPlugin(); }
@@ -18,7 +18,7 @@ extern "C" {
 
 
 // ============================================================================
-// IPlugin 瀹炵幇
+// IPlugin 实现
 // ============================================================================
 PluginMeta BaseUIPlugin::getMeta() const {
     return PluginMeta{
@@ -26,15 +26,18 @@ PluginMeta BaseUIPlugin::getMeta() const {
         "1.0.0",
         "Base UI Plugin: ANSYS-style menus and toolbar actions",
         PluginType::UI_ONLY,
-        {}  // 鏃犱緷璧?    };
+        {}  // 无依赖
+    };
 }
 
 bool BaseUIPlugin::isCompatible(RunMode mode) const {
-    // UI_ONLY 鎻掍欢鍦ㄦ墍鏈夋ā寮忎笅閮藉彲浠ユ敞鍐孉ction锛堜笉鍚玌I閮ㄥ垎锛?    return true;
+    // UI_ONLY 插件在所有模式下都可以注册Action（不含UI部分）
+    return true;
 }
 
 bool BaseUIPlugin::initialize(RunMode mode) {
-    // 娉ㄥ唽ANSYS椋庢牸鐨勮彍鍗?    registerFileActions();
+    // 注册ANSYS风格的菜单
+    registerFileActions();
     registerEditActions();
     registerViewActions();
     registerProjectActions();
@@ -53,7 +56,7 @@ void BaseUIPlugin::shutdown() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛欶ile 鑿滃崟
+// Action 注册：File 菜单
 // ============================================================================
 void BaseUIPlugin::registerFileActions() {
     auto& am = ActionManager::instance();
@@ -106,7 +109,8 @@ void BaseUIPlugin::registerFileActions() {
     };
     am.registerAction(desc4);
 
-    // 鍒嗛殧绗?    ActionDescriptor sep1;
+    // 分隔符
+    ActionDescriptor sep1;
     sep1.id = "File.Sep1";
     sep1.label = "";
     sep1.menuPath = "File/---";
@@ -134,7 +138,7 @@ void BaseUIPlugin::registerFileActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛欵dit 鑿滃崟
+// Action 注册：Edit 菜单
 // ============================================================================
 void BaseUIPlugin::registerEditActions() {
     auto& am = ActionManager::instance();
@@ -163,7 +167,8 @@ void BaseUIPlugin::registerEditActions() {
     };
     am.registerAction(desc2);
 
-    // 鍒嗛殧绗?    ActionDescriptor sep1;
+    // 分隔符
+    ActionDescriptor sep1;
     sep1.id = "Edit.Sep1";
     sep1.label = "";
     sep1.menuPath = "Edit/---";
@@ -220,7 +225,7 @@ void BaseUIPlugin::registerEditActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛歏iew 鑿滃崟
+// Action 注册：View 菜单
 // ============================================================================
 void BaseUIPlugin::registerViewActions() {
     auto& am = ActionManager::instance();
@@ -261,7 +266,8 @@ void BaseUIPlugin::registerViewActions() {
     };
     am.registerAction(desc3);
 
-    // 鍒嗛殧绗?    ActionDescriptor sep1;
+    // 分隔符
+    ActionDescriptor sep1;
     sep1.id = "View.Sep1";
     sep1.label = "";
     sep1.menuPath = "View/---";
@@ -292,7 +298,7 @@ void BaseUIPlugin::registerViewActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛歅roject 鑿滃崟
+// Action 注册：Project 菜单
 // ============================================================================
 void BaseUIPlugin::registerProjectActions() {
     auto& am = ActionManager::instance();
@@ -322,7 +328,8 @@ void BaseUIPlugin::registerProjectActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛欴raw 鑿滃崟锛堝甫Ribbon閰嶇疆锛?// ============================================================================
+// Action 注册：Draw 菜单（带Ribbon配置）
+// ============================================================================
 void BaseUIPlugin::registerDrawActions() {
     auto& am = ActionManager::instance();
 
@@ -334,9 +341,9 @@ void BaseUIPlugin::registerDrawActions() {
     desc1.shortcut = "B";
     desc1.menuPath = "Draw/Primitives";
     desc1.ribbon.tabId = "Draw";
-    desc1.ribbon.tabTitle = "缁樺埗";
+    desc1.ribbon.tabTitle = "绘制";
     desc1.ribbon.groupId = "Primitives";
-    desc1.ribbon.groupTitle = "鍩烘湰浣?;
+    desc1.ribbon.groupTitle = "基本体";
     desc1.ribbon.size = ToolButtonSize::Large;
     desc1.ribbon.tabOrder = 10;
     desc1.ribbon.groupOrder = 10;
@@ -352,9 +359,9 @@ void BaseUIPlugin::registerDrawActions() {
     desc2.tooltip = "Create cylinder";
     desc2.menuPath = "Draw/Primitives";
     desc2.ribbon.tabId = "Draw";
-    desc2.ribbon.tabTitle = "缁樺埗";
+    desc2.ribbon.tabTitle = "绘制";
     desc2.ribbon.groupId = "Primitives";
-    desc2.ribbon.groupTitle = "鍩烘湰浣?;
+    desc2.ribbon.groupTitle = "基本体";
     desc2.ribbon.size = ToolButtonSize::Large;
     desc2.ribbon.tabOrder = 10;
     desc2.ribbon.groupOrder = 10;
@@ -370,9 +377,9 @@ void BaseUIPlugin::registerDrawActions() {
     desc3.tooltip = "Create sphere";
     desc3.menuPath = "Draw/Primitives";
     desc3.ribbon.tabId = "Draw";
-    desc3.ribbon.tabTitle = "缁樺埗";
+    desc3.ribbon.tabTitle = "绘制";
     desc3.ribbon.groupId = "Primitives";
-    desc3.ribbon.groupTitle = "鍩烘湰浣?;
+    desc3.ribbon.groupTitle = "基本体";
     desc3.ribbon.size = ToolButtonSize::Large;
     desc3.ribbon.tabOrder = 10;
     desc3.ribbon.groupOrder = 10;
@@ -388,9 +395,9 @@ void BaseUIPlugin::registerDrawActions() {
     desc4.tooltip = "Create polygon";
     desc4.menuPath = "Draw/2D Objects";
     desc4.ribbon.tabId = "Draw";
-    desc4.ribbon.tabTitle = "缁樺埗";
+    desc4.ribbon.tabTitle = "绘制";
     desc4.ribbon.groupId = "2D";
-    desc4.ribbon.groupTitle = "2D鍥惧舰";
+    desc4.ribbon.groupTitle = "2D图形";
     desc4.ribbon.size = ToolButtonSize::Large;
     desc4.ribbon.tabOrder = 10;
     desc4.ribbon.groupOrder = 20;
@@ -402,7 +409,8 @@ void BaseUIPlugin::registerDrawActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛歁odeler 鑿滃崟锛堝甫Ribbon閰嶇疆锛?// ============================================================================
+// Action 注册：Modeler 菜单（带Ribbon配置）
+// ============================================================================
 void BaseUIPlugin::registerModelerActions() {
     auto& am = ActionManager::instance();
 
@@ -414,9 +422,9 @@ void BaseUIPlugin::registerModelerActions() {
     desc1.shortcut = "U";
     desc1.menuPath = "Modeler/Boolean";
     desc1.ribbon.tabId = "Modeler";
-    desc1.ribbon.tabTitle = "寤烘ā";
+    desc1.ribbon.tabTitle = "建模";
     desc1.ribbon.groupId = "Boolean";
-    desc1.ribbon.groupTitle = "甯冨皵杩愮畻";
+    desc1.ribbon.groupTitle = "布尔运算";
     desc1.ribbon.size = ToolButtonSize::Large;
     desc1.ribbon.tabOrder = 20;
     desc1.ribbon.groupOrder = 0;
@@ -433,9 +441,9 @@ void BaseUIPlugin::registerModelerActions() {
     desc2.shortcut = "S";
     desc2.menuPath = "Modeler/Boolean";
     desc2.ribbon.tabId = "Modeler";
-    desc2.ribbon.tabTitle = "寤烘ā";
+    desc2.ribbon.tabTitle = "建模";
     desc2.ribbon.groupId = "Boolean";
-    desc2.ribbon.groupTitle = "甯冨皵杩愮畻";
+    desc2.ribbon.groupTitle = "布尔运算";
     desc2.ribbon.size = ToolButtonSize::Large;
     desc2.ribbon.tabOrder = 20;
     desc2.ribbon.groupOrder = 0;
@@ -451,9 +459,9 @@ void BaseUIPlugin::registerModelerActions() {
     desc3.tooltip = "Apply fillet to edges";
     desc3.menuPath = "Modeler/Edge";
     desc3.ribbon.tabId = "Modeler";
-    desc3.ribbon.tabTitle = "寤烘ā";
+    desc3.ribbon.tabTitle = "建模";
     desc3.ribbon.groupId = "Edge";
-    desc3.ribbon.groupTitle = "杈圭紭";
+    desc3.ribbon.groupTitle = "边缘";
     desc3.ribbon.size = ToolButtonSize::Large;
     desc3.ribbon.tabOrder = 20;
     desc3.ribbon.groupOrder = 10;
@@ -469,9 +477,9 @@ void BaseUIPlugin::registerModelerActions() {
     desc4.tooltip = "Apply chamfer to edges";
     desc4.menuPath = "Modeler/Edge";
     desc4.ribbon.tabId = "Modeler";
-    desc4.ribbon.tabTitle = "寤烘ā";
+    desc4.ribbon.tabTitle = "建模";
     desc4.ribbon.groupId = "Edge";
-    desc4.ribbon.groupTitle = "杈圭紭";
+    desc4.ribbon.groupTitle = "边缘";
     desc4.ribbon.size = ToolButtonSize::Large;
     desc4.ribbon.tabOrder = 20;
     desc4.ribbon.groupOrder = 10;
@@ -483,7 +491,7 @@ void BaseUIPlugin::registerModelerActions() {
 
 
 // ============================================================================
-// Action 娉ㄥ唽锛歍ools 鑿滃崟
+// Action 注册：Tools 菜单
 // ============================================================================
 void BaseUIPlugin::registerToolsActions() {
     auto& am = ActionManager::instance();
@@ -513,7 +521,8 @@ void BaseUIPlugin::registerToolsActions() {
 
 
 // ============================================================================
-// IUIPlugin 瀹炵幇锛堜粎 GUI 妯″紡锛?// ============================================================================
+// IUIPlugin 实现（仅 GUI 模式）
+// ============================================================================
 #ifdef CAE_ENABLE_GUI
 void BaseUIPlugin::setupUI(MainWindow* mainWindow) {
     mainWindow_ = mainWindow;

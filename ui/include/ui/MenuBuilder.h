@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #ifdef CAE_ENABLE_GUI
 
 #include "core/ActionManager.h"
@@ -10,45 +10,53 @@
 #include <string>
 #include <memory>
 
-/// @brief 鑿滃崟鑷姩鏋勫缓鍣紙鏀寔澶氱骇瀛愯彍鍗曪級
+/// @brief 菜单自动构建器（支持多级子菜单）
 ///
-/// 鐩戝惉 ActionManager::onActionRegistered 浜嬩欢锛?/// 鏍规嵁 ActionDescriptor::menuPath 鑷姩鍦?QMenuBar 涓垱寤?瀹氫綅 QMenu 骞舵彃鍏?QAction銆?///
-/// menuPath 鏍煎紡绾﹀畾锛圓NSYS椋庢牸锛夛細
-///   "File"                          鈫?File鑿滃崟鏈熬
-///   "File/Save"                     鈫?File鑿滃崟Save瀛愰」
-///   "File/New"                      鈫?File鑿滃崟New瀛愰」
-///   "File/before:Save"              鈫?File鑿滃崟Save涔嬪墠
-///   "File/after:New"                鈫?File鑿滃崟New涔嬪悗
-///   "File/Save---"                  鈫?Save涔嬪悗鍔犲垎闅旂
-///   "---"                           鈫?鐙珛鍒嗛殧绗?class MenuBuilder : public QObject {
+/// 监听 ActionManager::onActionRegistered 事件，
+/// 根据 ActionDescriptor::menuPath 自动在 QMenuBar 中创建/定位 QMenu 并插入 QAction。
+///
+/// menuPath 格式约定（ANSYS风格）：
+///   "File"                          → File菜单末尾
+///   "File/Save"                     → File菜单Save子项
+///   "File/New"                      → File菜单New子项
+///   "File/before:Save"              → File菜单Save之前
+///   "File/after:New"                → File菜单New之后
+///   "File/Save---"                  → Save之后加分隔符
+///   "---"                           → 独立分隔符
+class MenuBuilder : public QObject {
     Q_OBJECT
 public:
     explicit MenuBuilder(QMenuBar* menuBar, QObject* parent = nullptr);
     ~MenuBuilder() override = default;
 
-    /// @brief 棰勫缓椤跺眰鑿滃崟锛圓NSYS椋庢牸锛欶ile/Edit/View/Project/Draw/Modeler/HFSS/Tools/Window/Help锛?    void buildTopLevelMenus();
+    /// @brief 预建顶层菜单（ANSYS风格：File/Edit/View/Project/Draw/Modeler/HFSS/Tools/Window/Help）
+    void buildTopLevelMenus();
 
-    /// @brief 灏嗕竴涓狝ctionDescriptor鎻掑叆鍒板搴旇彍鍗曚綅缃紙渚汷bserver鍥炶皟锛?    void insertAction(const ActionDescriptor& desc);
+    /// @brief 将一个ActionDescriptor插入到对应菜单位置（供Observer回调）
+    void insertAction(const ActionDescriptor& desc);
 
-    /// @brief 鑾峰彇椤跺眰鑿滃崟锛堜緵澶栭儴鏌ヨ锛?    QMenu* getTopMenu(const std::string& displayName) const;
+    /// @brief 获取顶层菜单（供外部查询）
+    QMenu* getTopMenu(const std::string& displayName) const;
 
 private:
-    /// @brief 瑙ｆ瀽menuPath锛屾壘鍒版垨鍒涘缓瀵瑰簲鐨凲Menu锛堟敮鎸佸绾у瓙鑿滃崟锛?    QMenu* resolveMenu(const std::string& menuPath);
+    /// @brief 解析menuPath，找到或创建对应的QMenu（支持多级子菜单）
+    QMenu* resolveMenu(const std::string& menuPath);
 
-    /// @brief 瑙ｆ瀽menuPath骞惰繑鍥炶矾寰勪笂鐨勬墍鏈夎彍鍗?    QList<QMenu*> resolveMenuPath(const std::string& menuPath);
+    /// @brief 解析menuPath并返回路径上的所有菜单
+    QList<QMenu*> resolveMenuPath(const std::string& menuPath);
 
-    /// @brief 鍦≦Menu涓寜insertPosition瀹氫綅鎻掑叆QAction
+    /// @brief 在QMenu中按insertPosition定位插入QAction
     void insertIntoMenu(QMenu* menu, QAction* action, const std::string& insertPos);
 
     QMenuBar* menuBar_{nullptr};
     
-    /// 椤跺眰鑿滃崟琛細key(濡?File") 鈫?QMenu*
+    /// 顶层菜单表：key(如"File") → QMenu*
     std::unordered_map<std::string, QMenu*> topMenus_;
     
-    /// 鎵€鏈夊凡鍒涘缓鐨凲Action琛細actionId 鈫?QAction*
+    /// 所有已创建的QAction表：actionId → QAction*
     std::unordered_map<std::string, QAction*> actionMap_;
     
-    /// 鑿滃崟璺緞缂撳瓨锛歮enuPath 鈫?QMenu*锛堢敤浜庡揩閫熸煡鎵撅級
+    /// 菜单路径缓存：menuPath → QMenu*（用于快速查找）
     std::unordered_map<std::string, QMenu*> menuPathCache_;
 };
 

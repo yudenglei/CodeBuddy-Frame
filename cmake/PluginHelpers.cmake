@@ -1,15 +1,18 @@
-﻿# cmake/PluginHelpers.cmake
-# 鎻愪緵 add_cae_plugin() 瀹忥紝缁熶竴鎻掍欢缂栬瘧瑙勫垯
+# cmake/PluginHelpers.cmake
+# 提供 add_cae_plugin() 宏，统一插件编译规则
 # ============================================================================
 # 
-# 浣跨敤鏂规硶锛?#   add_cae_plugin(cae_plugin_myplugin
+# 使用方法：
+#   add_cae_plugin(cae_plugin_myplugin
 #       SOURCES src/MyPlugin.cpp
 #       HEADERS include/MyPlugin.h
 #       TYPE UI_ONLY|DB_ONLY|HYBRID
 #   )
 #
-# 閲嶈锛?#   - 鎻掍欢瀵煎嚭浣跨敤 CAE_PLUGIN_EXPORT 瀹忥紙鍦?PluginGlobal.h 涓畾涔夛級
-#   - 缂栬瘧鏃惰嚜鍔ㄥ畾涔?CAE_PLUGIN_EXPORTS 瀹忕敤浜庡鍑虹鍙?#   - 閾炬帴 cae_core 鎻愪緵鏍稿績鎺ュ彛
+# 重要：
+#   - 插件导出使用 CAE_PLUGIN_EXPORT 宏（在 PluginGlobal.h 中定义）
+#   - 编译时自动定义 CAE_PLUGIN_EXPORTS 宏用于导出符号
+#   - 链接 cae_core 提供核心接口
 # ============================================================================
 
 include_guard(GLOBAL)
@@ -20,58 +23,73 @@ include_guard(GLOBAL)
 #   [TYPE UI_ONLY|DB_ONLY|HYBRID]
 # )
 #
-# 鍔熻兘锛?#   - 缂栬瘧涓哄叡浜簱锛?dll / .so锛?#   - 鑷姩璁剧疆浣嶇疆鏃犲叧浠ｇ爜锛?fPIC锛?#   - 閾炬帴 cae_core
-#   - 璁剧疆杈撳嚭鐩綍鍒?${CMAKE_BINARY_DIR}/plugins/
-#   - 鑷姩瀹氫箟瀵煎嚭瀹?CAE_PLUGIN_EXPORTS
-#   - 鐢熸垚 install 瑙勫垯
+# 功能：
+#   - 编译为共享库（.dll / .so）
+#   - 自动设置位置无关代码（-fPIC）
+#   - 链接 cae_core
+#   - 设置输出目录到 ${CMAKE_BINARY_DIR}/plugins/
+#   - 自动定义导出宏 CAE_PLUGIN_EXPORTS
+#   - 生成 install 规则
 
 macro(add_cae_plugin PLUGIN_NAME)
-    # 瑙ｆ瀽鍙傛暟
+    # 解析参数
     cmake_parse_arguments(PLUGIN
-        ""                  # 閫夐」锛堟棤锛?        "TYPE"              # 鍗曞€煎弬鏁?        "SOURCES;HEADERS"   # 澶氬€煎弬鏁?        ${ARGN}
+        ""                  # 选项（无）
+        "TYPE"              # 单值参数
+        "SOURCES;HEADERS"   # 多值参数
+        ${ARGN}
     )
 
-    # 浠庢彃浠跺悕绉版彁鍙栧畯鍚嶇О锛堣浆鎹负澶у啓锛?    # 渚嬪锛歝ae_plugin_base_ui -> CAE_PLUGIN_BASE_UI
+    # 从插件名称提取宏名称（转换为大写）
+    # 例如：cae_plugin_base_ui -> CAE_PLUGIN_BASE_UI
     string(TOUPPER "${PLUGIN_NAME}" PLUGIN_NAME_UPPER)
     string(REPLACE "CAE_PLUGIN_" "" PLUGIN_SUFFIX "${PLUGIN_NAME_UPPER}")
     set(PLUGIN_EXPORT_MACRO "CAE_PLUGIN_${PLUGIN_SUFFIX}")
 
-    # 鍒涘缓鍏变韩搴撶洰鏍?    add_library(${PLUGIN_NAME} SHARED ${PLUGIN_SOURCES} ${PLUGIN_HEADERS})
+    # 创建共享库目标
+    add_library(${PLUGIN_NAME} SHARED ${PLUGIN_SOURCES} ${PLUGIN_HEADERS})
 
     # =========================================================================
-    # 鍏抽敭锛氬畾涔夊鍑哄畯
+    # 关键：定义导出宏
     # =========================================================================
-    # CAE_PLUGIN_EXPORTS 鐢ㄤ簬 PluginGlobal.h 鍒ゆ柇鏄鍑鸿繕鏄鍏?    # 鍚屾椂瀹氫箟鎻掍欢涓撳睘瀹忎緵鎻掍欢浠ｇ爜浣跨敤锛堝 CAE_PLUGIN_BASE_UI锛?    target_compile_definitions(${PLUGIN_NAME} PRIVATE
+    # CAE_PLUGIN_EXPORTS 用于 PluginGlobal.h 判断是导出还是导入
+    # 同时定义插件专属宏供插件代码使用（如 CAE_PLUGIN_BASE_UI）
+    target_compile_definitions(${PLUGIN_NAME} PRIVATE
         CAE_PLUGIN_EXPORTS
         ${PLUGIN_EXPORT_MACRO}
     )
 
-    # 閾炬帴鏍稿績搴?    target_link_libraries(${PLUGIN_NAME} PRIVATE cae_core)
+    # 链接核心库
+    target_link_libraries(${PLUGIN_NAME} PRIVATE cae_core)
 
-    # 鑷姩娣诲姞 core 澶存枃浠惰矾寰?    target_include_directories(${PLUGIN_NAME} PRIVATE
+    # 自动添加 core 头文件路径
+    target_include_directories(${PLUGIN_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/core/include
     )
 
     # C++17
     target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
-    # 浣嶇疆鏃犲叧浠ｇ爜锛圠inux蹇呴渶锛學indows鍙€変絾鎺ㄨ崘锛?    set_target_properties(${PLUGIN_NAME} PROPERTIES
+    # 位置无关代码（Linux必需，Windows可选但推荐）
+    set_target_properties(${PLUGIN_NAME} PROPERTIES
         POSITION_INDEPENDENT_CODE ON
-        # 杈撳嚭鍒?build/plugins/ 鐩綍锛堜笌 PluginManager::discover 榛樿璺緞涓€鑷达級
+        # 输出到 build/plugins/ 目录（与 PluginManager::discover 默认路径一致）
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
-        # 鍘绘帀 "lib" 鍓嶇紑锛圵indows鏃犲奖鍝嶏紝Linux涓?.so 涓嶅姞 lib 鍓嶇紑锛?        PREFIX ""
-        # Windows: 鐢熸垚瀵煎叆搴?(.lib)
+        # 去掉 "lib" 前缀（Windows无影响，Linux下 .so 不加 lib 前缀）
+        PREFIX ""
+        # Windows: 生成导入库 (.lib)
         IMPORT_PREFIX ""
     )
 
-    # 鎻掍欢绫诲瀷瀹忥紙鐢ㄤ簬鏉′欢缂栬瘧锛?    if(DEFINED PLUGIN_TYPE)
+    # 插件类型宏（用于条件编译）
+    if(DEFINED PLUGIN_TYPE)
         target_compile_definitions(${PLUGIN_NAME} PRIVATE
             CAE_PLUGIN_TYPE_${PLUGIN_TYPE}=1
         )
     endif()
 
-    # Install 瑙勫垯
+    # Install 规则
     install(TARGETS ${PLUGIN_NAME}
         RUNTIME DESTINATION plugins
         LIBRARY DESTINATION plugins
