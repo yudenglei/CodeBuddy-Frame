@@ -12,8 +12,8 @@
 // 导出函数实现
 // ============================================================================
 extern "C" {
-    IPlugin* createPlugin()  { return new BaseUIPlugin(); }
-    void destroyPlugin(IPlugin* p) { delete p; }
+    CAE_PLUGIN_EXPORT IPlugin* createPlugin()  { return new BaseUIPlugin(); }
+    CAE_PLUGIN_EXPORT void destroyPlugin(IPlugin* p) { delete p; }
 }
 
 

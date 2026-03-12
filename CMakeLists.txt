@@ -22,6 +22,19 @@ message(STATUS "  ENABLE_TESTS  = ${ENABLE_TESTS}")
 message(STATUS "=============================")
 
 # ==============================================================
+# 宏定义映射（将 ENABLE_* 映射到 CAE_ENABLE_*）
+# ==============================================================
+if(ENABLE_GUI)
+    add_definitions(-DCAE_ENABLE_GUI)
+endif()
+if(ENABLE_PYTHON)
+    add_definitions(-DCAE_ENABLE_PYTHON)
+endif()
+if(ENABLE_GRPC)
+    add_definitions(-DCAE_ENABLE_GRPC)
+endif()
+
+# ==============================================================
 # CMake 模块路径
 # ==============================================================
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

@@ -2,6 +2,7 @@
 #include "core/IDBEngine.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
+#include "core/PluginGlobal.h"
 #include <iostream>
 #include <string>
 
@@ -130,6 +131,6 @@ private:
 // 导出函数
 // ============================================================
 extern "C" {
-    IPlugin* createPlugin()         { return new PCBDBPlugin(); }
-    void destroyPlugin(IPlugin* p)  { delete p; }
+    CAE_PLUGIN_EXPORT IPlugin* createPlugin()         { return new PCBDBPlugin(); }
+    CAE_PLUGIN_EXPORT void destroyPlugin(IPlugin* p)  { delete p; }
 }

@@ -1,6 +1,7 @@
 #include "core/IPlugin.h"
 #include "core/ActionManager.h"
 #include "core/ActionContext.h"
+#include "core/PluginGlobal.h"
 #include <iostream>
 
 #ifdef CAE_ENABLE_GUI
@@ -147,6 +148,6 @@ private:
 // 导出函数
 // ============================================================
 extern "C" {
-    IPlugin* createPlugin()         { return new PCBAnalysisPlugin(); }
-    void destroyPlugin(IPlugin* p)  { delete p; }
+    CAE_PLUGIN_EXPORT IPlugin* createPlugin()         { return new PCBAnalysisPlugin(); }
+    CAE_PLUGIN_EXPORT void destroyPlugin(IPlugin* p)  { delete p; }
 }

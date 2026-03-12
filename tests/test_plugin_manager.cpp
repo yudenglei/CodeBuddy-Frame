@@ -1,4 +1,4 @@
-/// @file test_plugin_manager.cpp
+﻿/// @file test_plugin_manager.cpp
 /// @brief PluginManager 单元测试骨架（mock插件，验证加载顺序和依赖排序）
 
 #include <gtest/gtest.h>

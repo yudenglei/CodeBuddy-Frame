@@ -110,10 +110,34 @@ void RibbonBar::registerGroup(const RibbonGroupDef& group) {
     
     // 获取Tab的布局
     QWidget* container = tabWidgets_[group.tabId];
-    QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(container->layout());
+    if (!container) {
+        qWarning() << "[RibbonBar] Tab container is null:" << group.tabId;
+        return;
+    }
+
+    QVBoxLayout* mainLayout = container->layout() ? qobject_cast<QVBoxLayout*>(container->layout()) : nullptr;
+    if (!mainLayout || mainLayout->count() == 0) {
+        qWarning() << "[RibbonBar] Invalid layout structure for tab:" << group.tabId;
+        return;
+    }
+
     QScrollArea* scrollArea = qobject_cast<QScrollArea*>(mainLayout->itemAt(0)->widget());
+    if (!scrollArea) {
+        qWarning() << "[RibbonBar] No scroll area found in tab:" << group.tabId;
+        return;
+    }
+
     QWidget* toolbarsContainer = scrollArea->widget();
-    QHBoxLayout* toolbarsLayout = qobject_cast<QHBoxLayout*>(toolbarsContainer->layout());
+    if (!toolbarsContainer) {
+        qWarning() << "[RibbonBar] No toolbars container in scroll area:" << group.tabId;
+        return;
+    }
+
+    QHBoxLayout* toolbarsLayout = toolbarsContainer->layout() ? qobject_cast<QHBoxLayout*>(toolbarsContainer->layout()) : nullptr;
+    if (!toolbarsLayout) {
+        qWarning() << "[RibbonBar] Invalid toolbars layout in container:" << group.tabId;
+        return;
+    }
     
     // 创建Group容器
     QWidget* groupWidget = new QWidget(toolbarsContainer);

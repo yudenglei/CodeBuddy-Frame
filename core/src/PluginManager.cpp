@@ -2,6 +2,7 @@
 #include "core/IPlugin.h"
 #include "core/PluginMeta.h"
 #include "core/RunMode.h"
+#include "core/PluginRegistry.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -104,6 +105,9 @@ public:
             std::string name = plugin->getMeta().name;
             entries_[name] = std::move(entry);
             std::cout << "[PluginManager] Discovered plugin: " << name << "\n";
+
+            // 注册到全局插件注册表
+            PluginRegistry::instance().registerPlugin(name, plugin);
         }
 
         return !entries_.empty();
@@ -179,6 +183,13 @@ continue;
                 }
             }
         }
+        // 从全局插件注册表注销所有插件
+        for (const auto& [name, entry] : entries_) {
+            if (entry.plugin) {
+                PluginRegistry::instance().unregisterPlugin(name);
+            }
+        }
+
         loadOrder_.clear();
         entries_.clear();
     }
